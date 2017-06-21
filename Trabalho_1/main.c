@@ -24,7 +24,7 @@
 
 // Declarações de tipos
 typedef struct {
-    int tamanho;
+    char tamanho[sizeof(int)];
     char inscricao[C_TAMANHO_CAMPO];
     char nome[C_TAMANHO_CAMPO];
     char curso[C_TAMANHO_CAMPO];
@@ -43,7 +43,7 @@ int selecionarOpcao();
 // METODOS UTEIS DE UM REGISTRO
 void removerPipeRegistro(Registro * registro);
 void printRegistro(Registro registro);
-int getTamanhoDoRegistro(Registro reg);
+void setTamanho(Registro * reg);
 Registro getRegistro(FILE * arquivo);
 void lerCampo(char campo[], FILE * arquivo);
 void RegistroToString(Registro reg, char str[]);
@@ -78,7 +78,7 @@ void importar() {
     while(assigned(reg)) {
         RegistroToString(reg, buffer);
         fputs(buffer, fRegistros);
-
+        strcpy(buffer, C_EMPTY_STRING);
         reg = getRegistro(fDados);
     }
 }
@@ -188,11 +188,15 @@ void printRegistro(Registro registro) {
     printf("\n  > SCORE     = %s\n", registro.score);
 }
 
-int getTamanhoDoRegistro(Registro reg) {
-    return strlen(reg.inscricao)
-         + strlen(reg.nome)
-         + strlen(reg.curso)
-         + strlen(reg.score);
+void setTamanho(Registro * reg) {
+    const C_BASE_DECIMAL = 10;
+
+    int tam = strlen(reg->inscricao)
+            + strlen(reg->nome)
+            + strlen(reg->curso)
+            + strlen(reg->score);
+
+    itoa(tam, reg->tamanho, C_BASE_DECIMAL);
 }
 
 Registro getRegistro(FILE * arquivo) {
@@ -203,7 +207,7 @@ Registro getRegistro(FILE * arquivo) {
     lerCampo(reg.curso, arquivo);
     lerCampo(reg.score, arquivo);
 
-    reg.tamanho = getTamanhoDoRegistro(reg);
+    setTamanho(&reg);
 
     removerPipeRegistro(&reg);
 
@@ -213,8 +217,6 @@ Registro getRegistro(FILE * arquivo) {
 void lerCampo(char campo[], FILE * arquivo) {
     int i = 0;
     char flag;
-
-    strcpy(campo, C_EMPTY_STRING);
 
     if(flag = fgetc(arquivo) != EOF)
         fseek(arquivo, -1l, SEEK_CUR);
@@ -228,14 +230,7 @@ void lerCampo(char campo[], FILE * arquivo) {
 }
 
 void RegistroToString(Registro reg, char str[]) {
-    const int C_BASE_DECIMAL = 10;
-    char sTam[sizeof(reg.tamanho)];
-
-    strcpy(str, C_EMPTY_STRING);
-
-    itoa(reg.tamanho, sTam, C_BASE_DECIMAL);
-
-    strcat(str, sTam);
+    strcat(str, reg.tamanho);
     strcat(str, "=");
     strcat(str, reg.inscricao);
     strcat(str, "|");
@@ -250,8 +245,7 @@ void RegistroToString(Registro reg, char str[]) {
 Registro newRegistro() {
     Registro reg;
 
-    reg.tamanho = 0;
-
+    strcpy(reg.tamanho, "0");
     strcpy(reg.inscricao, C_EMPTY_STRING);
     strcpy(reg.nome, C_EMPTY_STRING);
     strcpy(reg.curso, C_EMPTY_STRING);
@@ -261,7 +255,7 @@ Registro newRegistro() {
 }
 
 bool assigned(Registro reg) {
-    return reg.tamanho > 0;
+    return strcasecmp(reg.tamanho, "0") != 0;
 }
 
 // METODOS UTEIS
