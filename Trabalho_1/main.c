@@ -226,7 +226,13 @@ void lerCampo(char campo[], FILE * arquivo) {
           campo[i] = fgetc(arquivo);
           i++;
       } while(campo[i - 1] != C_PIPE);
-  }
+    }
+
+    if(i <= C_TAMANHO_CAMPO){
+      campo[i] = '\0';
+    }
+
+
 }
 
 void RegistroToString(Registro reg, char str[]) {
