@@ -52,6 +52,7 @@ bool assigned(Registro reg);
 // METODOS UTEIS
 void removerPipeString(char str[]);
 void limparBuffer();
+void limparString(char str[]);
 void getLED(FILE * arquivo, char led[]);
 //
 int main();
@@ -62,10 +63,11 @@ void importar() {
     FILE * fDados = fopen(C_NOME_FILE_DADOS, "r");
     FILE * fRegistros = fopen(C_NOME_FILE_REGISTROS, "a+");
 
-    char buffer[C_QTD_CAMPOS * C_TAMANHO_CAMPO] = C_EMPTY_STRING,
-         led[10] = C_EMPTY_STRING;
+    char buffer[C_QTD_CAMPOS * C_TAMANHO_CAMPO],
+         led[10];
 
-    long byteOffset = 0;
+    limparString(buffer);
+    limparString(led);
 
     rewind(fDados);
 
@@ -78,7 +80,7 @@ void importar() {
     while(assigned(reg)) {
         RegistroToString(reg, buffer);
         fputs(buffer, fRegistros);
-        strcpy(buffer, C_EMPTY_STRING);
+        limparString(buffer);
         reg = getRegistro(fDados);
     }
 }
@@ -218,6 +220,8 @@ void lerCampo(char campo[], FILE * arquivo) {
     int i = 0;
     char flag;
 
+    limparString(campo);
+
     if(flag = fgetc(arquivo) != EOF)
         fseek(arquivo, -1l, SEEK_CUR);
 
@@ -228,11 +232,7 @@ void lerCampo(char campo[], FILE * arquivo) {
       } while(campo[i - 1] != C_PIPE);
     }
 
-    if(i <= C_TAMANHO_CAMPO){
-      campo[i] = '\0';
-    }
-
-
+    campo[i] = '\0'; // finaliza a string para evitar lixo
 }
 
 void RegistroToString(Registro reg, char str[]) {
@@ -251,11 +251,12 @@ void RegistroToString(Registro reg, char str[]) {
 Registro newRegistro() {
     Registro reg;
 
+    limparString(reg.inscricao);
+    limparString(reg.nome);
+    limparString(reg.curso);
+    limparString(reg.score);
+
     strcpy(reg.tamanho, "0");
-    strcpy(reg.inscricao, C_EMPTY_STRING);
-    strcpy(reg.nome, C_EMPTY_STRING);
-    strcpy(reg.curso, C_EMPTY_STRING);
-    strcpy(reg.score, C_EMPTY_STRING);
 
     return reg;
 }
@@ -279,16 +280,23 @@ void limparBuffer() {
     fflush(stdin);
 }
 
+void limparString(char str[]) {
+  str[0] = '\0';
+}
+
 void getLED(FILE * arquivo, char led[]) {
   int i = 0;
+
+  limparString(led);
 
   led[i] = fgetc(arquivo);
 
   if(led[i] != EOF) {
       while(led[i] != ']') {
-      i++;
-      led[i] = fgetc(arquivo);
-    }
+        i++;
+        led[i] = fgetc(arquivo);
+      }
+      led[i] = '\0';
   }
   else strcpy(led, "[LED=*-1]");
 }
