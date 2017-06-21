@@ -24,7 +24,9 @@
 
 // Declarações de tipos
 typedef struct {
+    // campos auxiliares
     char tamanho[sizeof(int)];
+    // campos necessários
     char inscricao[C_TAMANHO_CAMPO];
     char nome[C_TAMANHO_CAMPO];
     char curso[C_TAMANHO_CAMPO];
@@ -45,6 +47,7 @@ void removerPipeRegistro(Registro * registro);
 void printRegistro(Registro registro);
 void setTamanho(Registro * reg);
 Registro getRegistro(FILE * arquivo);
+Registro getRegistroBusca(FILE * arquivo);
 void lerCampo(char campo[], FILE * arquivo);
 void RegistroToString(Registro reg, char str[]);
 Registro newRegistro();
@@ -56,7 +59,6 @@ void limparString(char str[]);
 void getLED(FILE * arquivo, char led[]);
 //
 int main();
-
 // REQUISITOS
 
 void importar() {
@@ -70,6 +72,7 @@ void importar() {
     limparString(led);
 
     rewind(fDados);
+    rewind(fRegistros);
 
     getLED(fRegistros, led);
     fputs(led, fRegistros);
@@ -86,7 +89,24 @@ void importar() {
 }
 
 void buscar() {
-    // TODO: IMPLEMENTAR
+    FILE * fd = fopen(C_NOME_FILE_REGISTROS, "r");
+
+    char chave[C_TAMANHO_CAMPO];
+
+    limparBuffer();
+
+    puts("Qual inscricao deseja buscar?");
+    gets(chave);
+
+    Registro reg = getRegistroBusca(fd);
+    while((assigned(reg)) && (strcasecmp(reg.inscricao, chave) != 0) && !feof(fd)) {
+        reg = getRegistroBusca(fd);
+    }
+
+    if(assigned(reg) && (strcasecmp(reg.inscricao, chave) == 0))
+        printRegistro(reg);
+    else
+        puts("Registro nao encontrado!");
 }
 
 void inserir() {
@@ -216,6 +236,21 @@ Registro getRegistro(FILE * arquivo) {
     return reg;
 }
 
+Registro getRegistroBusca(FILE * arquivo) {
+    Registro reg = newRegistro();
+
+    lerCampo(reg.tamanho, arquivo);
+    lerCampo(reg.inscricao, arquivo);
+    lerCampo(reg.nome, arquivo);
+    lerCampo(reg.curso, arquivo);
+    lerCampo(reg.score, arquivo);
+
+    removerPipeRegistro(&reg);
+
+    return reg;
+}
+
+
 void lerCampo(char campo[], FILE * arquivo) {
     int i = 0;
     char flag;
@@ -237,7 +272,7 @@ void lerCampo(char campo[], FILE * arquivo) {
 
 void RegistroToString(Registro reg, char str[]) {
     strcat(str, reg.tamanho);
-    strcat(str, "=");
+    strcat(str, "|");
     strcat(str, reg.inscricao);
     strcat(str, "|");
     strcat(str, reg.nome);
@@ -281,24 +316,24 @@ void limparBuffer() {
 }
 
 void limparString(char str[]) {
-  str[0] = '\0';
+    str[0] = '\0';
 }
 
 void getLED(FILE * arquivo, char led[]) {
-  int i = 0;
+    int i = 0;
 
-  limparString(led);
+    limparString(led);
 
-  led[i] = fgetc(arquivo);
+    led[i] = fgetc(arquivo);
 
-  if(led[i] != EOF) {
-      while(led[i] != ']') {
-        i++;
-        led[i] = fgetc(arquivo);
-      }
-      led[i] = '\0';
-  }
-  else strcpy(led, "[LED=*-1]");
+    if(led[i] != EOF) {
+        while(led[i] != ']') {
+          i++;
+          led[i] = fgetc(arquivo);
+        }
+        led[i] = '\0';
+    }
+    else strcpy(led, "[LED=*-1]");
 }
 
 // METODO PRINCIPAL
