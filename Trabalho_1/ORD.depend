@@ -1,0 +1,25 @@
+# depslib dependency file v1.0
+1497836301 source:c:\users\dougl\desktop\ord\ord\main.c
+	<stdio.h>
+	<stdlib.h>
+	<stdbool.h>
+	<string.h>
+
+1497825303 source:c:\users\caio\desktop\ord\ord\main.c
+	<stdio.h>
+	<stdlib.h>
+	<stdbool.h>
+	<string.h>
+
+1497979174 source:c:\users\douglas.mezuraro\desktop\ord\main.c
+	<stdio.h>
+	<stdlib.h>
+	<stdbool.h>
+	<string.h>
+
+1498003923 source:c:\users\dougl\desktop\ord\main.c
+	<stdio.h>
+	<stdlib.h>
+	<stdbool.h>
+	<string.h>
+
