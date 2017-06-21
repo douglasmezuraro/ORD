@@ -44,18 +44,15 @@ int selecionarOpcao();
 void removerPipeRegistro(Registro * registro);
 void printRegistro(Registro registro);
 int getTamanhoDoRegistro(Registro reg);
-Registro getRegistro(FILE * arquivo, long * byteOffset);
-void lerCampo(FILE * arquivo, char campo[], long * byteOffset);
+Registro getRegistro(FILE * arquivo);
+void lerCampo(char campo[], FILE * arquivo);
 void RegistroToString(Registro reg, char str[]);
 Registro newRegistro();
 bool assigned(Registro reg);
 // METODOS UTEIS
 void removerPipeString(char str[]);
 void limparBuffer();
-void limparString(char str[]);
 void getLED(FILE * arquivo, char led[]);
-//
-void getRegistroAsString(char reg[], FILE * arquivo, long * byteOffset);
 //
 int main();
 
@@ -65,33 +62,29 @@ void importar() {
     FILE * fDados = fopen(C_NOME_FILE_DADOS, "r");
     FILE * fRegistros = fopen(C_NOME_FILE_REGISTROS, "a+");
 
-    char buffer[C_QTD_CAMPOS * C_TAMANHO_CAMPO],
-         led[10];
+    char buffer[C_QTD_CAMPOS * C_TAMANHO_CAMPO] = C_EMPTY_STRING,
+         led[10] = C_EMPTY_STRING;
 
     long byteOffset = 0;
 
+    rewind(fDados);
+
     getLED(fRegistros, led);
-    fwrite(led, strlen(led), 1, fRegistros);
+    fputs(led, fRegistros);
     fputs("\n", fRegistros);
 
-    Registro reg = getRegistro(fDados, &byteOffset);
+    Registro reg = getRegistro(fDados);
 
     while(assigned(reg)) {
         RegistroToString(reg, buffer);
-        fwrite(buffer, strlen(buffer), 1, fRegistros);
+        fputs(buffer, fRegistros);
 
-        reg = getRegistro(fDados, &byteOffset);
+        reg = getRegistro(fDados);
     }
 }
 
 void buscar() {
-  FILE * fd = fopen(C_NOME_FILE_REGISTROS, "r");
-
-  char led[10];
-
-  getLED(fd, led);
-
-
+    // TODO: IMPLEMENTAR
 }
 
 void inserir() {
@@ -196,23 +189,19 @@ void printRegistro(Registro registro) {
 }
 
 int getTamanhoDoRegistro(Registro reg) {
-    char buffer[1000] = C_EMPTY_STRING;
-
-    strcat(buffer, reg.inscricao);
-    strcat(buffer, reg.nome);
-    strcat(buffer, reg.curso);
-    strcat(buffer, reg.score);
-
-    return strlen(buffer);
+    return strlen(reg.inscricao)
+         + strlen(reg.nome)
+         + strlen(reg.curso)
+         + strlen(reg.score);
 }
 
-Registro getRegistro(FILE * arquivo, long * byteOffset) {
+Registro getRegistro(FILE * arquivo) {
     Registro reg = newRegistro();
 
-    lerCampo(arquivo, reg.inscricao, byteOffset);
-    lerCampo(arquivo, reg.nome, byteOffset);
-    lerCampo(arquivo, reg.curso, byteOffset);
-    lerCampo(arquivo, reg.score, byteOffset);
+    lerCampo(reg.inscricao, arquivo);
+    lerCampo(reg.nome, arquivo);
+    lerCampo(reg.curso, arquivo);
+    lerCampo(reg.score, arquivo);
 
     reg.tamanho = getTamanhoDoRegistro(reg);
 
@@ -221,30 +210,30 @@ Registro getRegistro(FILE * arquivo, long * byteOffset) {
     return reg;
 }
 
-void lerCampo(FILE * arquivo, char campo[], long * byteOffset) {
+void lerCampo(char campo[], FILE * arquivo) {
     int i = 0;
     char flag;
 
-    fseek(arquivo, (* byteOffset), SEEK_SET);
+    strcpy(campo, C_EMPTY_STRING);
 
     if(flag = fgetc(arquivo) != EOF)
-        fseek(arquivo, (* byteOffset), SEEK_SET);
+        fseek(arquivo, -1l, SEEK_CUR);
 
     if(feof(arquivo) == 0) {
       do {
           campo[i] = fgetc(arquivo);
           i++;
-          * byteOffset = (* byteOffset) + 1;
       } while(campo[i - 1] != C_PIPE);
   }
 }
 
 void RegistroToString(Registro reg, char str[]) {
-    char sTam[10];
+    const int C_BASE_DECIMAL = 10;
+    char sTam[sizeof(reg.tamanho)];
 
-    limparString(str);
+    strcpy(str, C_EMPTY_STRING);
 
-    itoa(reg.tamanho, sTam, 10);
+    itoa(reg.tamanho, sTam, C_BASE_DECIMAL);
 
     strcat(str, sTam);
     strcat(str, "=");
@@ -261,11 +250,12 @@ void RegistroToString(Registro reg, char str[]) {
 Registro newRegistro() {
     Registro reg;
 
+    reg.tamanho = 0;
+
     strcpy(reg.inscricao, C_EMPTY_STRING);
     strcpy(reg.nome, C_EMPTY_STRING);
     strcpy(reg.curso, C_EMPTY_STRING);
     strcpy(reg.score, C_EMPTY_STRING);
-    reg.tamanho = 0;
 
     return reg;
 }
@@ -289,18 +279,11 @@ void limparBuffer() {
     fflush(stdin);
 }
 
-void limparString(char str[]) {
-  strcpy(str, C_EMPTY_STRING);
-}
-
 void getLED(FILE * arquivo, char led[]) {
   int i = 0;
 
-  rewind(arquivo);
-
-  limparString(led);
-
   led[i] = fgetc(arquivo);
+
   if(led[i] != EOF) {
       while(led[i] != ']') {
       i++;
