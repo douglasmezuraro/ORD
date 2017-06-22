@@ -44,18 +44,21 @@ void mostrarMenu();
 int selecionarOpcao();
 // METODOS UTEIS DE UM REGISTRO
 void removerPipeRegistro(Registro * registro);
-void printRegistro(Registro registro);
+void printRegistro(Registro reg);
 void setTamanho(Registro * reg);
-Registro getRegistro(FILE * arquivo);
-Registro getRegistroBusca(FILE * arquivo);
+Registro getRegAsRegistro(FILE * arquivo);
+void getRegAsString(char str[], FILE * arquivo);
 void lerCampo(char campo[], FILE * arquivo);
 void registroToString(Registro reg, char str[]);
 Registro newRegistro();
 bool assigned(Registro reg);
-// METODOS UTEIS
-void removerPipeString(char str[]);
-void limparBuffer();
+// METODOS UTEIS PARA STRINGS
 void limparString(char str[]);
+void removerPipeString(char str[]);
+bool stringsIguais(char a[], char b[]);
+// METODOS UTEIS
+void limparBuffer();
+
 void getLED(FILE * arquivo, char led[]);
 void posicinarNoPrimeiroRegistro(FILE * arquivo);
 //
@@ -78,58 +81,54 @@ void importar() {
     getLED(fRegistros, led);
     fputs(led, fRegistros);
 
-    Registro reg = getRegistro(fDados);
+    Registro reg = getRegAsRegistro(fDados);
 
     while(assigned(reg)) {
         registroToString(reg, buffer);
         fputs(buffer, fRegistros);
         limparString(buffer);
-        reg = getRegistro(fDados);
+        reg = getRegAsRegistro(fDados);
     }
 }
 
 void buscar() {
     FILE * fd = fopen(C_NOME_FILE_REGISTROS, "r");
-    char inscricao[C_TAMANHO_CAMPO];
+    bool match = false;
+    char inscricao[C_TAMANHO_CAMPO],
+         tam[C_TAMANHO_CAMPO],
+         key[C_TAMANHO_CAMPO],
+         buffer[C_QTD_CAMPOS * C_TAMANHO_CAMPO];
 
-    limparBuffer();
+    limparString(tam); limparString(key); limparString(buffer); limparBuffer();
 
     puts("Qual inscricao deseja buscar?");
     gets(inscricao);
 
-    char tam[C_TAMANHO_CAMPO],
-         key[C_TAMANHO_CAMPO],
-         buffer[1000],
-         campo[200];
-
-    limparString(tam); limparString(key); limparString(buffer); limparString(campo);
-
     posicinarNoPrimeiroRegistro(fd);
 
-    long p = -1;
+    long byteOffset = -1;
     int iTam = 0;
 
-    while(true) {
+    while(!match) {
       lerCampo(tam, fd);
-      removerPipeString(tam);
       iTam = atoi(tam);
-      p = ftell(fd);
+
+      byteOffset = ftell(fd); // pega o byteoffset do inicio de um registro
 
       lerCampo(key, fd);
       removerPipeString(key);
 
-      fseek(fd, p, SEEK_SET);    // posiciona no campo lido
+      fseek(fd, byteOffset, SEEK_SET);    // posiciona no inicio do registro
 
-      if(strcasecmp(key, inscricao) == 0) {
-        int j;
-        for(j = 1; j <= C_QTD_CAMPOS; j++) {
-          lerCampo(campo, fd);
-          strcat(buffer, campo);
-        }
-        break;
+      if(stringsIguais(key, inscricao))
+      // se achou o registro o laço para
+      {
+        getRegAsString(buffer, fd);
+        match = true;
       }
-      else fseek(fd, iTam, SEEK_CUR); // posciona no proximo campo pulando o tamanho do tamanho lid
+      else fseek(fd, iTam, SEEK_CUR); // senao pula p/ o proximo
     }
+
     puts("OCORRENCIA: ");
     puts(buffer);
 }
@@ -229,12 +228,12 @@ void removerPipeRegistro(Registro * registro) {
     removerPipeString(registro->score);
 }
 
-void printRegistro(Registro registro) {
+void printRegistro(Registro reg) {
     printf("\nREGISTRO:");
-    printf("\n  > INSCRICAO = %s", registro.inscricao);
-    printf("\n  > NOME      = %s", registro.nome);
-    printf("\n  > CURSO     = %s", registro.curso);
-    printf("\n  > SCORE     = %s\n", registro.score);
+    printf("\n  > INSCRICAO = %s",   reg.inscricao);
+    printf("\n  > NOME      = %s",   reg.nome);
+    printf("\n  > CURSO     = %s",   reg.curso);
+    printf("\n  > SCORE     = %s\n", reg.score);
 }
 
 void setTamanho(Registro * reg) {
@@ -248,7 +247,7 @@ void setTamanho(Registro * reg) {
     itoa(tam, reg->tamanho, C_BASE_DECIMAL);
 }
 
-Registro getRegistro(FILE * arquivo) {
+Registro getRegAsRegistro(FILE * arquivo) {
     Registro reg = newRegistro();
 
     lerCampo(reg.inscricao, arquivo);
@@ -263,20 +262,17 @@ Registro getRegistro(FILE * arquivo) {
     return reg;
 }
 
-Registro getRegistroBusca(FILE * arquivo) {
-    Registro reg = newRegistro();
+void getRegAsString(char str[], FILE * arquivo) {
+  int i;
+  char campo[C_TAMANHO_CAMPO];
 
-    lerCampo(reg.tamanho, arquivo);
-    lerCampo(reg.inscricao, arquivo);
-    lerCampo(reg.nome, arquivo);
-    lerCampo(reg.curso, arquivo);
-    lerCampo(reg.score, arquivo);
+  limparString(str); limparString(campo);
 
-    removerPipeRegistro(&reg);
-
-    return reg;
+  for(i = 1; i <= C_QTD_CAMPOS; i++) {
+    lerCampo(campo, arquivo);
+    strcat(str, campo);
+  }
 }
-
 
 void lerCampo(char campo[], FILE * arquivo) {
     int i = 0;
@@ -327,7 +323,7 @@ bool assigned(Registro reg) {
     return strcasecmp(reg.tamanho, "0") != 0;
 }
 
-// METODOS UTEIS
+// METODOS UTEIS PARA STRIGS
 
 void removerPipeString(char str[]) {
     int i;
@@ -338,12 +334,18 @@ void removerPipeString(char str[]) {
     }
 }
 
-void limparBuffer() {
-    fflush(stdin);
-}
-
 void limparString(char str[]) {
     str[0] = '\0';
+}
+
+bool stringsIguais(char a[], char b[]) {
+  return strcmp(a, b) == 0;
+}
+
+// METODOS UTEIS
+
+void limparBuffer() {
+    fflush(stdin);
 }
 
 void getLED(FILE * arquivo, char led[])
