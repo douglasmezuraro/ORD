@@ -49,7 +49,7 @@ void setTamanho(Registro * reg);
 Registro getRegistro(FILE * arquivo);
 Registro getRegistroBusca(FILE * arquivo);
 void lerCampo(char campo[], FILE * arquivo);
-void RegistroToString(Registro reg, char str[]);
+void registroToString(Registro reg, char str[]);
 Registro newRegistro();
 bool assigned(Registro reg);
 // METODOS UTEIS
@@ -57,6 +57,7 @@ void removerPipeString(char str[]);
 void limparBuffer();
 void limparString(char str[]);
 void getLED(FILE * arquivo, char led[]);
+void posicinarNoPrimeiroRegistro(FILE * arquivo);
 //
 int main();
 // REQUISITOS
@@ -76,12 +77,11 @@ void importar() {
 
     getLED(fRegistros, led);
     fputs(led, fRegistros);
-    fputs("\n", fRegistros);
 
     Registro reg = getRegistro(fDados);
 
     while(assigned(reg)) {
-        RegistroToString(reg, buffer);
+        registroToString(reg, buffer);
         fputs(buffer, fRegistros);
         limparString(buffer);
         reg = getRegistro(fDados);
@@ -90,49 +90,76 @@ void importar() {
 
 void buscar() {
     FILE * fd = fopen(C_NOME_FILE_REGISTROS, "r");
-
-    char chave[C_TAMANHO_CAMPO];
+    char inscricao[C_TAMANHO_CAMPO];
 
     limparBuffer();
 
     puts("Qual inscricao deseja buscar?");
-    gets(chave);
+    gets(inscricao);
 
-    Registro reg = getRegistroBusca(fd);
-    while((assigned(reg)) && (strcasecmp(reg.inscricao, chave) != 0) && !feof(fd)) {
-        reg = getRegistroBusca(fd);
+    char tam[C_TAMANHO_CAMPO],
+         key[C_TAMANHO_CAMPO],
+         buffer[1000],
+         campo[200];
+
+    limparString(tam); limparString(key); limparString(buffer); limparString(campo);
+
+    posicinarNoPrimeiroRegistro(fd);
+
+    long p = -1;
+    int iTam = 0;
+
+    while(true) {
+      lerCampo(tam, fd);
+      removerPipeString(tam);
+      iTam = atoi(tam);
+      p = ftell(fd);
+
+      lerCampo(key, fd);
+      removerPipeString(key);
+
+      fseek(fd, p, SEEK_SET);    // posiciona no campo lido
+
+      if(strcasecmp(key, inscricao) == 0) {
+        int j;
+        for(j = 1; j <= C_QTD_CAMPOS; j++) {
+          lerCampo(campo, fd);
+          strcat(buffer, campo);
+        }
+        break;
+      }
+      else fseek(fd, iTam, SEEK_CUR); // posciona no proximo campo pulando o tamanho do tamanho lid
     }
-
-    if(assigned(reg) && (strcasecmp(reg.inscricao, chave) == 0))
-        printRegistro(reg);
-    else
-        puts("Registro nao encontrado!");
+    puts("OCORRENCIA: ");
+    puts(buffer);
 }
 
 void inserir() {
-    Registro registro;
+    Registro reg = newRegistro();
 
     limparBuffer();
 
     printf("\nDigite a inscricao:\n  > ");
-    gets(registro.inscricao);
+    gets(reg.inscricao);
 
     printf("\nDigite o nome:\n  > ");
-    gets(registro.nome);
+    gets(reg.nome);
 
     printf("\nDigite o curso:\n  > ");
-    gets(registro.curso);
+    gets(reg.curso);
 
     printf("\nDigite o score:\n  > ");
-    gets(registro.score);
+    gets(reg.score);
 
-    char str[4*40] = C_EMPTY_STRING;
+    char str[C_QTD_CAMPOS * C_TAMANHO_CAMPO];
+    limparString(str);
 
-    RegistroToString(registro, str);
+    setTamanho(&reg);
+    registroToString(reg, str);
     puts("STRING:");
     puts(str);
 
-    printRegistro(registro);
+    printRegistro(reg);
 }
 
 void remover() {
@@ -270,7 +297,7 @@ void lerCampo(char campo[], FILE * arquivo) {
     campo[i] = '\0'; // finaliza a string para evitar lixo
 }
 
-void RegistroToString(Registro reg, char str[]) {
+void registroToString(Registro reg, char str[]) {
     strcat(str, reg.tamanho);
     strcat(str, "|");
     strcat(str, reg.inscricao);
@@ -319,7 +346,10 @@ void limparString(char str[]) {
     str[0] = '\0';
 }
 
-void getLED(FILE * arquivo, char led[]) {
+void getLED(FILE * arquivo, char led[])
+// Esse método atribui ao parâmetro led uma string que contenha a led do arquivo onde
+// caso o arquivo não exista é retornado a led apontando para -1
+{
     int i = 0;
 
     limparString(led);
@@ -334,6 +364,16 @@ void getLED(FILE * arquivo, char led[]) {
         led[i] = '\0';
     }
     else strcpy(led, "[LED=*-1]");
+}
+
+void posicinarNoPrimeiroRegistro(FILE * arquivo)
+// OBJETIVO : posicionar o ponteiro do arquivo depois da LED
+{
+  char aux;
+  rewind(arquivo);
+  do {
+    aux = fgetc(arquivo);
+  } while(aux != ']');
 }
 
 // METODO PRINCIPAL
