@@ -1,6 +1,8 @@
 #ifndef _UTEIS_H_
 #define _UTEIS_H_
 
+#define C_EMPTY_STRING ""
+
 // Declaração
 void limparBuffer();
 bool stringsIguais(char a[], char b[]);

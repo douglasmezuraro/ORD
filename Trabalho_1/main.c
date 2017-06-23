@@ -3,59 +3,34 @@
 #include <stdbool.h>
 #include <string.h>
 
+// bibliotecas personalizadas
 #include "uteis.h"
+#include "registro.h"
 
 // Constantes uteis
 #define C_NOME_FILE_DADOS     "dados-inline.txt"
 #define C_NOME_FILE_REGISTROS "registros.txt"
 #define C_PIPE                '|'
-#define C_EMPTY_STRING        ""
-#define C_TAMANHO_CAMPO       40
-#define C_QTD_CAMPOS          4
 // Constantes do menu de opções
 #define C_PARAR_EXECUCAO 0
 #define C_IMPORTAR       1
 #define C_BUSCAR         2
 #define C_INSERIR        3
 #define C_REMOVER        4
-// Constantes de posições dos campos de um registro
-#define C_CAMPO_INSCRICAO 1
-#define C_CAMPO_NOME      2
-#define C_CAMPO_CURSO     3
-#define C_CAMPO_SCORE     4
-
-// Declarações de tipos
-typedef struct {
-    // campos auxiliares
-    char tamanho[sizeof(int)];
-    // campos necessários
-    char inscricao[C_TAMANHO_CAMPO];
-    char nome[C_TAMANHO_CAMPO];
-    char curso[C_TAMANHO_CAMPO];
-    char score[C_TAMANHO_CAMPO];
-} Registro;
 
 // REQUISITOS
 void importar();
 void buscar();
 void inserir();
 void inserir();
-
 // MENU
 void mostrarMenu();
 int selecionarOpcao();
 // METODOS UTEIS DE UM REGISTRO
-void removerPipeRegistro(Registro * registro);
-void printRegistro(Registro reg);
-void setTamanho(Registro * reg);
+
 Registro getRegAsRegistro(FILE * arquivo);
 void getRegAsString(char str[], FILE * arquivo);
 void lerCampo(char campo[], char delimitador, FILE * arquivo);
-void registroToString(Registro reg, char str[]);
-Registro stringToRegistro(char str[]);
-Registro newRegistro();
-bool assigned(Registro reg);
-
 void getLED(FILE * arquivo, char led[]);
 void posicinarNoPrimeiroRegistro(FILE * arquivo);
 //
@@ -148,7 +123,7 @@ void inserir() {
     char str[C_QTD_CAMPOS * C_TAMANHO_CAMPO];
     limparString(str);
 
-    setTamanho(&reg);
+    setTamanhoRegistro(&reg);
     registroToString(reg, str);
     puts("STRING:");
     puts(str);
@@ -214,34 +189,6 @@ int selecionarOpcao() {
     return aux;
 }
 
-// METODOS UTEIS DE UM REGISTRO
-
-void removerPipeRegistro(Registro * registro) {
-    removerCaractere(registro->inscricao, C_PIPE);
-    removerCaractere(registro->nome, C_PIPE);
-    removerCaractere(registro->curso, C_PIPE);
-    removerCaractere(registro->score, C_PIPE);
-}
-
-void printRegistro(Registro reg) {
-    printf("\nREGISTRO:");
-    printf("\n  > INSCRICAO = %s",   reg.inscricao);
-    printf("\n  > NOME      = %s",   reg.nome);
-    printf("\n  > CURSO     = %s",   reg.curso);
-    printf("\n  > SCORE     = %s\n", reg.score);
-}
-
-void setTamanho(Registro * reg) {
-    const C_BASE_DECIMAL = 10;
-
-    int tam = strlen(reg->inscricao)
-            + strlen(reg->nome)
-            + strlen(reg->curso)
-            + strlen(reg->score);
-
-    itoa(tam, reg->tamanho, C_BASE_DECIMAL);
-}
-
 Registro getRegAsRegistro(FILE * arquivo) {
     Registro reg = newRegistro();
 
@@ -250,7 +197,7 @@ Registro getRegAsRegistro(FILE * arquivo) {
     lerCampo(reg.curso, C_PIPE, arquivo);
     lerCampo(reg.score, C_PIPE, arquivo);
 
-    setTamanho(&reg);
+    setTamanhoRegistro(&reg);
 
     removerPipeRegistro(&reg);
 
@@ -287,37 +234,6 @@ void lerCampo(char campo[], char delimitador, FILE * arquivo) {
 
     campo[i] = '\0'; // finaliza a string para evitar lixo
 }
-
-void registroToString(Registro reg, char str[]) {
-    strcat(str, reg.tamanho);
-    strcat(str, "|");
-    strcat(str, reg.inscricao);
-    strcat(str, "|");
-    strcat(str, reg.nome);
-    strcat(str, "|");
-    strcat(str, reg.curso);
-    strcat(str, "|");
-    strcat(str, reg.score);
-    strcat(str, "|");
-}
-
-Registro newRegistro() {
-    Registro reg;
-
-    limparString(reg.inscricao);
-    limparString(reg.nome);
-    limparString(reg.curso);
-    limparString(reg.score);
-
-    strcpy(reg.tamanho, "0");
-
-    return reg;
-}
-
-bool assigned(Registro reg) {
-    return strcasecmp(reg.tamanho, "0") != 0;
-}
-
 
 void getLED(FILE * arquivo, char led[])
 // Esse método atribui ao parâmetro led uma string que contenha a led do arquivo onde
