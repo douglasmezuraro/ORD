@@ -3,6 +3,8 @@
 #include <stdbool.h>
 #include <string.h>
 
+#include "uteis.h"
+
 // Constantes uteis
 #define C_NOME_FILE_DADOS     "dados-inline.txt"
 #define C_NOME_FILE_REGISTROS "registros.txt"
@@ -53,12 +55,6 @@ void registroToString(Registro reg, char str[]);
 Registro stringToRegistro(char str[]);
 Registro newRegistro();
 bool assigned(Registro reg);
-// METODOS UTEIS PARA STRINGS
-void limparString(char str[]);
-void removerPipeString(char str[]);
-bool stringsIguais(char a[], char b[]);
-// METODOS UTEIS
-void limparBuffer();
 
 void getLED(FILE * arquivo, char led[]);
 void posicinarNoPrimeiroRegistro(FILE * arquivo);
@@ -117,7 +113,7 @@ void buscar() {
       byteOffset = ftell(fd); // pega o byteoffset do inicio de um registro
 
       lerCampo(key, C_PIPE, fd);
-      removerPipeString(key);
+      removerCaractere(key, C_PIPE);
 
       fseek(fd, byteOffset, SEEK_SET);    // posiciona no inicio do registro
 
@@ -221,10 +217,10 @@ int selecionarOpcao() {
 // METODOS UTEIS DE UM REGISTRO
 
 void removerPipeRegistro(Registro * registro) {
-    removerPipeString(registro->inscricao);
-    removerPipeString(registro->nome);
-    removerPipeString(registro->curso);
-    removerPipeString(registro->score);
+    removerCaractere(registro->inscricao, C_PIPE);
+    removerCaractere(registro->nome, C_PIPE);
+    removerCaractere(registro->curso, C_PIPE);
+    removerCaractere(registro->score, C_PIPE);
 }
 
 void printRegistro(Registro reg) {
@@ -322,30 +318,6 @@ bool assigned(Registro reg) {
     return strcasecmp(reg.tamanho, "0") != 0;
 }
 
-// METODOS UTEIS PARA STRIGS
-
-void removerPipeString(char str[]) {
-    int i;
-
-    for(i = 0; i < strlen(str); i++) {
-        if(str[i] == C_PIPE)
-            str[i] = '\0';
-    }
-}
-
-void limparString(char str[]) {
-    str[0] = '\0';
-}
-
-bool stringsIguais(char a[], char b[]) {
-  return strcmp(a, b) == 0;
-}
-
-// METODOS UTEIS
-
-void limparBuffer() {
-    fflush(stdin);
-}
 
 void getLED(FILE * arquivo, char led[])
 // Esse método atribui ao parâmetro led uma string que contenha a led do arquivo onde

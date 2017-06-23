@@ -29,9 +29,14 @@
 	<stdbool.h>
 	<string.h>
 
-1498236118 source:d:\git\ord\trabalho_1\main.c
+1498238210 source:d:\git\ord\trabalho_1\main.c
 	<stdio.h>
 	<stdlib.h>
 	<stdbool.h>
 	<string.h>
+	"uteis.h"
+
+1498238096 d:\git\ord\trabalho_1\registro.h
+
+1498238073 d:\git\ord\trabalho_1\uteis.h
 
