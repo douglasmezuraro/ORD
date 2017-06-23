@@ -48,8 +48,9 @@ void printRegistro(Registro reg);
 void setTamanho(Registro * reg);
 Registro getRegAsRegistro(FILE * arquivo);
 void getRegAsString(char str[], FILE * arquivo);
-void lerCampo(char campo[], FILE * arquivo);
+void lerCampo(char campo[], char delimitador, FILE * arquivo);
 void registroToString(Registro reg, char str[]);
+Registro stringToRegistro(char str[]);
 Registro newRegistro();
 bool assigned(Registro reg);
 // METODOS UTEIS PARA STRINGS
@@ -110,19 +111,17 @@ void buscar() {
     int iTam = 0;
 
     while(!match) {
-      lerCampo(tam, fd);
+      lerCampo(tam, C_PIPE, fd);
       iTam = atoi(tam);
 
       byteOffset = ftell(fd); // pega o byteoffset do inicio de um registro
 
-      lerCampo(key, fd);
+      lerCampo(key, C_PIPE, fd);
       removerPipeString(key);
 
       fseek(fd, byteOffset, SEEK_SET);    // posiciona no inicio do registro
 
-      if(stringsIguais(key, inscricao))
-      // se achou o registro o laço para
-      {
+      if(stringsIguais(key, inscricao)) {
         getRegAsString(buffer, fd);
         match = true;
       }
@@ -250,10 +249,10 @@ void setTamanho(Registro * reg) {
 Registro getRegAsRegistro(FILE * arquivo) {
     Registro reg = newRegistro();
 
-    lerCampo(reg.inscricao, arquivo);
-    lerCampo(reg.nome, arquivo);
-    lerCampo(reg.curso, arquivo);
-    lerCampo(reg.score, arquivo);
+    lerCampo(reg.inscricao, C_PIPE, arquivo);
+    lerCampo(reg.nome, C_PIPE, arquivo);
+    lerCampo(reg.curso, C_PIPE, arquivo);
+    lerCampo(reg.score, C_PIPE, arquivo);
 
     setTamanho(&reg);
 
@@ -269,12 +268,12 @@ void getRegAsString(char str[], FILE * arquivo) {
   limparString(str); limparString(campo);
 
   for(i = 1; i <= C_QTD_CAMPOS; i++) {
-    lerCampo(campo, arquivo);
+    lerCampo(campo, C_PIPE, arquivo);
     strcat(str, campo);
   }
 }
 
-void lerCampo(char campo[], FILE * arquivo) {
+void lerCampo(char campo[], char delimitador, FILE * arquivo) {
     int i = 0;
     char flag;
 
@@ -287,7 +286,7 @@ void lerCampo(char campo[], FILE * arquivo) {
       do {
           campo[i] = fgetc(arquivo);
           i++;
-      } while(campo[i - 1] != C_PIPE);
+      } while(campo[i - 1] != delimitador);
     }
 
     campo[i] = '\0'; // finaliza a string para evitar lixo
@@ -352,20 +351,10 @@ void getLED(FILE * arquivo, char led[])
 // Esse método atribui ao parâmetro led uma string que contenha a led do arquivo onde
 // caso o arquivo não exista é retornado a led apontando para -1
 {
-    int i = 0;
+    lerCampo(led, ']', arquivo);
 
-    limparString(led);
-
-    led[i] = fgetc(arquivo);
-
-    if(led[i] != EOF) {
-        while(led[i] != ']') {
-          i++;
-          led[i] = fgetc(arquivo);
-        }
-        led[i] = '\0';
-    }
-    else strcpy(led, "[LED=*-1]");
+    if(stringsIguais(led, C_EMPTY_STRING))
+      strcpy(led, "[LED=*-1]");
 }
 
 void posicinarNoPrimeiroRegistro(FILE * arquivo)
