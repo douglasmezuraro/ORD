@@ -10,7 +10,6 @@
 // Constantes uteis
 #define C_NOME_FILE_DADOS     "dados-inline.txt"
 #define C_NOME_FILE_REGISTROS "registros.txt"
-#define C_PIPE                '|'
 // Constantes do menu de opções
 #define C_PARAR_EXECUCAO 0
 #define C_IMPORTAR       1
@@ -57,41 +56,40 @@ void importar() {
 
 void buscar() {
     FILE * fd = fopen(C_NOME_FILE_REGISTROS, "r");
-    bool match = false;
-    char inscricao[C_TAMANHO_CAMPO],
-         tam[C_TAMANHO_CAMPO],
-         key[C_TAMANHO_CAMPO];
     Registro reg;
+    bool match = false;
+    char chave[C_TAMANHO_CAMPO],
+         tamanho[C_TAMANHO_CAMPO],
+         inscricao[C_TAMANHO_CAMPO];
 
-    limparString(tam); limparString(key); limparBuffer();
+
+    limparString(tamanho); limparString(inscricao); limparBuffer();
 
     puts("Qual inscricao deseja buscar?");
-    gets(inscricao);
+    gets(chave);
 
     posicinarNoPrimeiroRegistro(fd);
 
     long byteOffset = -1;
-    int iTam = 0;
-
     while(!match) {
-      lerCampo(tam, C_PIPE, fd);
-      iTam = atoi(tam);
+      lerCampo(tamanho, '|', fd);
 
-      byteOffset = ftell(fd); // pega o byteoffset do inicio de um registro
+      byteOffset = ftell(fd);
 
-      lerCampo(key, C_PIPE, fd);
-      removerCaractere(key, C_PIPE);
+      lerCampo(inscricao, '|', fd);
+      removerCaractere(inscricao, '|');
 
-      fseek(fd, byteOffset, SEEK_SET);    // posiciona no inicio do registro
+      fseek(fd, byteOffset, SEEK_SET);
 
-      if(stringsIguais(key, inscricao)) {
+      if(stringsIguais(chave, inscricao)) {
         reg = getRegistro(fd);
         match = true;
       }
-      else fseek(fd, iTam, SEEK_CUR); // senao pula p/ o proximo
+      else {
+        int iTam = atoi(tamanho);
+        fseek(fd, iTam, SEEK_CUR);
+      }
     }
-
-    puts("OCORRENCIA: ");
     printRegistro(reg);
 }
 

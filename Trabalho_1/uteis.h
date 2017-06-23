@@ -2,6 +2,7 @@
 #define _UTEIS_H_
 
 #define C_EMPTY_STRING ""
+#define C_STRING_END '\0'
 
 // Declaração
 void limparBuffer();
@@ -23,12 +24,12 @@ void removerCaractere(char str[], char caractere) {
 
     for(i = 0; i < strlen(str); i++) {
         if(str[i] == caractere)
-            str[i] = '\0';
+            str[i] = C_STRING_END;
     }
 }
 
 void limparString(char str[]) {
-    str[0] = '\0';
+    str[0] = C_STRING_END;
 }
 
 #endif
