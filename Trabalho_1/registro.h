@@ -23,7 +23,7 @@ void printRegistro(Registro reg);
 bool assigned(Registro reg);
 Registro newRegistro();
 Registro stringToRegistro(char str[]);
-void removerPipeRegistro(Registro * registro);
+void removerPipeRegistro(Registro * reg);
 void setTamanhoRegistro(Registro * reg);
 
 // Implementações
@@ -65,11 +65,11 @@ void registroToString(Registro reg, char str[]) {
     strcat(str, "|");
 }
 
-void removerPipeRegistro(Registro * registro) {
-    removerCaractere(registro->inscricao, '|');
-    removerCaractere(registro->nome, '|');
-    removerCaractere(registro->curso, '|');
-    removerCaractere(registro->score, '|');
+void removerPipeRegistro(Registro * reg) {
+    removerCaractere(reg->inscricao, '|');
+    removerCaractere(reg->nome, '|');
+    removerCaractere(reg->curso, '|');
+    removerCaractere(reg->score, '|');
 }
 
 void setTamanhoRegistro(Registro * reg) {
