@@ -25,6 +25,10 @@ Registro newRegistro();
 Registro stringToRegistro(char str[]);
 void removerPipeRegistro(Registro * reg);
 void setTamanhoRegistro(Registro * reg);
+Registro getRegistro(FILE * arquivo);
+void lerCampo(char campo[], char delimitador, FILE * arquivo);
+void getLED(FILE * arquivo, char led[]);
+void posicinarNoPrimeiroRegistro(FILE * arquivo);
 
 // Implementações
 void printRegistro(Registro reg) {
@@ -81,6 +85,55 @@ void setTamanhoRegistro(Registro * reg) {
             + strlen(reg->score);
 
     itoa(tam, reg->tamanho, C_BASE_DECIMAL);
+}
+
+Registro getRegistro(FILE * arquivo) {
+    Registro reg = newRegistro();
+
+    lerCampo(reg.inscricao, '|', arquivo);
+    lerCampo(reg.nome, '|', arquivo);
+    lerCampo(reg.curso, '|', arquivo);
+    lerCampo(reg.score, '|', arquivo);
+
+    setTamanhoRegistro(&reg);
+
+    removerPipeRegistro(&reg);
+
+    return reg;
+}
+
+void lerCampo(char campo[], char delimitador, FILE * arquivo) {
+    int i = 0;
+    char flag;
+
+    limparString(campo);
+
+    if(flag = fgetc(arquivo) != EOF)
+        fseek(arquivo, -1l, SEEK_CUR);
+
+    if(feof(arquivo) == 0) {
+      do {
+          campo[i] = fgetc(arquivo);
+          i++;
+      } while(campo[i - 1] != delimitador);
+    }
+
+    campo[i] = '\0'; // finaliza a string para evitar lixo
+}
+
+void getLED(FILE * arquivo, char led[]) {
+    lerCampo(led, ']', arquivo);
+
+    if(stringsIguais(led, C_EMPTY_STRING))
+      strcpy(led, "[LED=*-1]");
+}
+
+void posicinarNoPrimeiroRegistro(FILE * arquivo) {
+  char aux;
+  rewind(arquivo);
+  do {
+    aux = fgetc(arquivo);
+  } while(aux != ']');
 }
 
 #endif
