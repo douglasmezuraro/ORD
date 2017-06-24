@@ -10,6 +10,7 @@
 // Constantes uteis
 #define C_NOME_FILE_DADOS     "dados-inline.txt"
 #define C_NOME_FILE_REGISTROS "registros.txt"
+
 // Constantes do menu de opções
 #define C_PARAR_EXECUCAO 0
 #define C_IMPORTAR       1
@@ -36,18 +37,14 @@ void importar() {
 
     limparString(buffer);
 
-    rewind(fDados);
-    rewind(fRegistros);
-
     setLedByteOffset(-1l, fRegistros);
 
-    Registro reg = getRegistro(fDados);
-
+    Registro reg = getRegistro(fDados, false);
     while(assigned(reg)) {
         registroToString(reg, buffer);
         fputs(buffer, fRegistros);
         limparString(buffer);
-        reg = getRegistro(fDados);
+        reg = getRegistro(fDados, false);
     }
 }
 
@@ -63,7 +60,7 @@ bool buscar() {
 
     if(byteOffset != -1) {
         fseek(fd, byteOffset, SEEK_SET);
-        Registro reg = getRegistro(fd);
+        Registro reg = getRegistro(fd, true);
         printRegistro(reg);
         return true;
     } return false;
@@ -94,17 +91,13 @@ void inserir() {
     long byteOffset = getLedByteOffset(fd);
 
     if(byteOffset == -1) {
-        // inserir no final do arquivo
+        // insere no final do arquivo
         fseek(fd, 0, SEEK_END);
         fputs(buffer, fd);
     }
     else {
         // TODO: PEGAR O PRIMEIRO ESPAÇO DISPONIVEL DA LED QUE CAIBA O REGISTRO
     }
-
-    //puts("STRING:");
-    //puts(buffer);
-    //printRegistro(reg);
 }
 
 bool remover() {
