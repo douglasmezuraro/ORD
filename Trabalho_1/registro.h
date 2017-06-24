@@ -125,9 +125,9 @@ void lerCampo(char campo[], char delimitador, FILE * arquivo) {
 }
 
 long getLedByteOffset(FILE * arquivo) {
-    char sLED[sizeof(long)];
+    char sLED[10];
 
-    fseek(arquivo, strlen("LED="), SEEK_SET);
+    fseek(arquivo, strlen("LED=*"), SEEK_SET);
     lerCampo(sLED, '.', arquivo);
 
     return atol(sLED);
@@ -146,7 +146,7 @@ long buscarPorInscricao(char chave[], FILE * arquivo)
     limparString(tamanho); limparString(inscricao);
 
     // ignora o cabeçario movendo o ponteiro p/ o primeiro registro
-    fseek(arquivo, C_TAMANHO_CABECARIO + 1, SEEK_SET);
+    fseek(arquivo, C_TAMANHO_CABECARIO, SEEK_SET);
 
     // enquanto não encontrou faça:
     while(!match) {
@@ -192,13 +192,15 @@ bool fimArquivo(FILE * arquivo) {
 
 void setLedByteOffset(long byteOffset, FILE * arquivo) {
     char sLed[C_TAMANHO_CABECARIO]; limparString(sLed);
-    char sByteOffset[15]; limparString(sByteOffset);
+    char sByteOffset[10]; limparString(sByteOffset);
     int i;
 
+    if(byteOffset > 0)
+        byteOffset = byteOffset + 1; // por causa do 1 caractere do pipe
     // converte o byteOffset em string
     ltoa(byteOffset, sByteOffset, 10);
     // concatena com a string sLed, ex: "LED="
-    strcat(sLed, "LED=");
+    strcat(sLed, "LED=*");
     // concatena com a string sLed, ex: "LED=1782"
     strcat(sLed, sByteOffset);
 
@@ -206,7 +208,7 @@ void setLedByteOffset(long byteOffset, FILE * arquivo) {
     for(i = strlen(sLed); i < C_TAMANHO_CABECARIO; i++)
         sLed[i] = '.';
 
-    sLed[C_TAMANHO_CABECARIO] = '.';
+   sLed[C_TAMANHO_CABECARIO] = '\0';
 
     // volta pro inicio do arquivo
     rewind(arquivo);
@@ -216,20 +218,26 @@ void setLedByteOffset(long byteOffset, FILE * arquivo) {
 
 void atualizarLed(long byteOffset, FILE * arquivo) {
     long lByteOffset = getLedByteOffset(arquivo);
-    char sByteOffset[sizeof(long)];
+    char sByteOffset[10];
 
-    char sLED[sizeof(long)]; limparString(sLED);
+    char sLed[10];
+    limparString(sLed);
+
+    // converte o byteOffset que é um long e atribui na string sByteOffset
     ltoa(lByteOffset, sByteOffset, 10);
 
-    // ex: sLED = "(*";
-    strcat(sLED, "(*");
-    // ex: sLED = "(*7218";
-    strcat(sLED, sByteOffset);
-    // ex? sLED = "(*7218)";
-    strcat(sLED, ")");
+    // ex: sLed = "(*";
+    strcat(sLed, "(*");
+    // ex: sLed = "(*7218";
+    strcat(sLed, sByteOffset);
+    // ex: sLed = "(*7218)";
+    strcat(sLed, ")");
 
+    // posiciona o ponteiro no byteOffset no registro que está sendo alterado
     fseek(arquivo, byteOffset, SEEK_SET);
-    fputs(sLED, arquivo);
+
+    // escreve no arquivo
+    fputs(sLed, arquivo);
 }
 
 #endif
