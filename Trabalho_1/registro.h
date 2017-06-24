@@ -1,8 +1,11 @@
 #ifndef _REGISTRO_H_
 #define _REGISTRO_H_
 
-#define C_TAMANHO_CAMPO 40
-#define C_QTD_CAMPOS    4
+#define C_TAMANHO_CABECARIO 50
+// TODO: o cabeçario por hora contem apenas a led, futuramente se
+// der tempo implementar mais coisas, ex, qte de registros
+#define C_TAMANHO_CAMPO     40
+#define C_QTD_CAMPOS        4
 
 #define C_CAMPO_INSCRICAO 1
 #define C_CAMPO_NOME      2
@@ -27,8 +30,8 @@ void removerPipeRegistro(Registro * reg);
 void setTamanhoRegistro(Registro * reg);
 Registro getRegistro(FILE * arquivo);
 void lerCampo(char campo[], char delimitador, FILE * arquivo);
-void getLED(FILE * arquivo, char led[]);
-void posicinarNoPrimeiroRegistro(FILE * arquivo);
+void setCabecario(char cabecario[], FILE * arquivo);
+long getLED(FILE * arquivo);
 
 // Implementações
 void printRegistro(Registro reg) {
@@ -121,19 +124,21 @@ void lerCampo(char campo[], char delimitador, FILE * arquivo) {
     campo[i] = '\0'; // finaliza a string para evitar lixo
 }
 
-void getLED(FILE * arquivo, char led[]) {
-    lerCampo(led, ']', arquivo);
+void setCabecario(char cabecario[], FILE * arquivo) {
+    int i,
+        length = strlen(cabecario);
 
-    if(stringsIguais(led, C_EMPTY_STRING))
-      strcpy(led, "[LED=*-1]");
+    for(i = length; i < C_TAMANHO_CABECARIO; i++)
+        cabecario[i] = '.';
 }
 
-void posicinarNoPrimeiroRegistro(FILE * arquivo) {
-  char aux;
-  rewind(arquivo);
-  do {
-    aux = fgetc(arquivo);
-  } while(aux != ']');
+long getLED(FILE * arquivo) {
+    char sLED[sizeof(int)];
+
+    fseek(arquivo, strlen("LED="), SEEK_SET);
+    lerCampo(sLED, '.', arquivo);
+
+    return atol(sLED);
 }
 
 #endif

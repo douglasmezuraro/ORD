@@ -30,19 +30,20 @@ int main();
 
 void importar() {
     FILE * fDados = fopen(C_NOME_FILE_DADOS, "r");
-    FILE * fRegistros = fopen(C_NOME_FILE_REGISTROS, "a+");
+    FILE * fRegistros = fopen(C_NOME_FILE_REGISTROS, "w");
 
     char buffer[C_QTD_CAMPOS * C_TAMANHO_CAMPO],
-         led[10];
+         cabecario[C_TAMANHO_CABECARIO];
 
     limparString(buffer);
-    limparString(led);
+    limparString(cabecario);
 
     rewind(fDados);
     rewind(fRegistros);
 
-    getLED(fRegistros, led);
-    fputs(led, fRegistros);
+    strcpy(cabecario, "LED=-1");
+    setCabecario(cabecario, fRegistros);
+    fputs(cabecario, fRegistros);
 
     Registro reg = getRegistro(fDados);
 
@@ -57,18 +58,18 @@ void importar() {
 void buscar() {
     FILE * fd = fopen(C_NOME_FILE_REGISTROS, "r");
     Registro reg;
+
     bool match = false;
     char chave[C_TAMANHO_CAMPO],
          tamanho[C_TAMANHO_CAMPO],
          inscricao[C_TAMANHO_CAMPO];
-
 
     limparString(tamanho); limparString(inscricao); limparBuffer();
 
     puts("Qual inscricao deseja buscar?");
     gets(chave);
 
-    posicinarNoPrimeiroRegistro(fd);
+    fseek(fd, C_TAMANHO_CABECARIO, SEEK_SET);
 
     long byteOffset = -1;
     while(!match) {
@@ -94,31 +95,41 @@ void buscar() {
 }
 
 void inserir() {
+    FILE * fd = fopen(C_NOME_FILE_REGISTROS, "a+");
     Registro reg = newRegistro();
 
     limparBuffer();
 
+    // Popula o registro
     printf("\nDigite a inscricao:\n  > ");
     gets(reg.inscricao);
-
     printf("\nDigite o nome:\n  > ");
     gets(reg.nome);
-
     printf("\nDigite o curso:\n  > ");
     gets(reg.curso);
-
     printf("\nDigite o score:\n  > ");
     gets(reg.score);
 
-    char str[C_QTD_CAMPOS * C_TAMANHO_CAMPO];
-    limparString(str);
+    // Popula o buffer
+    char buffer[C_QTD_CAMPOS * C_TAMANHO_CAMPO]; limparString(buffer);
 
     setTamanhoRegistro(&reg);
-    registroToString(reg, str);
-    puts("STRING:");
-    puts(str);
+    registroToString(reg, buffer);
 
-    printRegistro(reg);
+    long byteOffset = getLED(fd);
+
+    if(byteOffset == -1) {
+        // inserir no final do arquivo
+        fseek(fd, 0, SEEK_END);
+        fputs(buffer, fd);
+    }
+    else {
+        // TODO: PEGAR O PRIMEIRO ESPAÇO DISPONIVEL DA LED QUE CAIBA O REGISTRO
+    }
+
+    //puts("STRING:");
+    //puts(buffer);
+    //printRegistro(reg);
 }
 
 void remover() {
