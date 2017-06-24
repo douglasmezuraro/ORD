@@ -19,9 +19,9 @@
 
 // REQUISITOS
 void importar();
-void buscar();
+bool buscar();
 void inserir();
-void inserir();
+bool remover();
 // MENU
 void mostrarMenu();
 int selecionarOpcao();
@@ -51,7 +51,7 @@ void importar() {
     }
 }
 
-void buscar() {
+bool buscar() {
     FILE * fd = fopen(C_NOME_FILE_REGISTROS, "r");
     char chave[C_TAMANHO_CAMPO]; limparString(chave);
 
@@ -65,7 +65,8 @@ void buscar() {
         fseek(fd, byteOffset, SEEK_SET);
         Registro reg = getRegistro(fd);
         printRegistro(reg);
-    } else puts("Registro nao encontrado.");
+        return true;
+    } return false;
 }
 
 void inserir() {
@@ -106,7 +107,7 @@ void inserir() {
     //printRegistro(reg);
 }
 
-void remover() {
+bool remover() {
     FILE * fd = fopen(C_NOME_FILE_REGISTROS, "rw+");
     char chave[C_TAMANHO_CAMPO]; limparString(chave);
 
@@ -119,7 +120,8 @@ void remover() {
     if(byteOffset != -1) {
         atualizarLed(byteOffset, fd);
         setLedByteOffset(byteOffset, fd);
-    } else puts("Registro nao encontrado.");
+        return true;
+    } return false;
 }
 
 void mostrarMenu() {
@@ -133,16 +135,18 @@ void mostrarMenu() {
             puts("Dados importados com sucesso!");
             break;
         case C_BUSCAR:
-            buscar();
-            puts("Dados buscados com sucesso!");
+            if(!buscar())
+                puts("Registro nao encontrdo!");
             break;
         case C_INSERIR:
             inserir();
             puts("Dados inseridos com sucesso!");
             break;
         case C_REMOVER:
-            remover();
-            puts("Dados removidos com sucesso!");
+            if(remover())
+                puts("Registro removido com sucesso!");
+            else
+                puts("Registro nao encontrado!");
             break;
         default:
             puts("Opcao invalida!");
