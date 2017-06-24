@@ -32,6 +32,8 @@ Registro getRegistro(FILE * arquivo);
 void lerCampo(char campo[], char delimitador, FILE * arquivo);
 void setCabecario(char cabecario[], FILE * arquivo);
 long getLED(FILE * arquivo);
+long buscarPorInscricao(char chave[], FILE * arquivo);
+bool fimArquivo(FILE * arquivo);
 
 // Implementações
 void printRegistro(Registro reg) {
@@ -107,18 +109,14 @@ Registro getRegistro(FILE * arquivo) {
 
 void lerCampo(char campo[], char delimitador, FILE * arquivo) {
     int i = 0;
-    char flag;
 
     limparString(campo);
 
-    if(flag = fgetc(arquivo) != EOF)
-        fseek(arquivo, -1l, SEEK_CUR);
-
-    if(feof(arquivo) == 0) {
-      do {
-          campo[i] = fgetc(arquivo);
-          i++;
-      } while(campo[i - 1] != delimitador);
+    if(!fimArquivo(arquivo)) {
+        do {
+            campo[i] = fgetc(arquivo);
+            i++;
+        } while(campo[i - 1] != delimitador);
     }
 
     campo[i] = '\0'; // finaliza a string para evitar lixo
@@ -139,6 +137,63 @@ long getLED(FILE * arquivo) {
     lerCampo(sLED, '.', arquivo);
 
     return atol(sLED);
+}
+
+long buscarPorInscricao(char chave[], FILE * arquivo)
+// Esse método busca uma incricao no arquivo e retorna seu byte offset,
+// caso nao encontre o retorno é -1
+{
+    char tamanho[C_TAMANHO_CAMPO],
+         inscricao[C_TAMANHO_CAMPO];
+    bool match = false;
+    long byteOffset = -1;
+
+    // inicializa as strings
+    limparString(tamanho); limparString(inscricao);
+
+    // ignora o cabeçario movendo o ponteiro p/ o primeiro registro
+    fseek(arquivo, C_TAMANHO_CABECARIO, SEEK_SET);
+
+    // enquanto não encontrou faça:
+    while(!match) {
+      // lê o primeiro campo que é o tamanho do registro
+      lerCampo(tamanho, '|', arquivo);
+      // obtem o byte offset do inicio do registro sem c seu tamanho
+      byteOffset = ftell(arquivo);
+      // lê o segundo campo que é a inscrição do registro
+      lerCampo(inscricao, '|', arquivo);
+      // retira a pipe da inscrição lida para poder comparar com a incrição passada por parâmetro
+      removerCaractere(inscricao, '|');
+      // movimenta o ponteiro para o offset obtido logo acima
+      fseek(arquivo, byteOffset, SEEK_SET);
+
+      if(stringsIguais(chave, inscricao))
+        // se as for igual o registro foi encontrado
+        match = true;
+      if(fimArquivo(arquivo)) {
+        byteOffset = -1;
+        break;
+      }
+      else {
+        // senão pula para o proximo registro
+        int iTam = atoi(tamanho);
+        fseek(arquivo, iTam, SEEK_CUR);
+      }
+    }
+    return byteOffset;
+}
+
+bool fimArquivo(FILE * arquivo) {
+    // lê o caractere da posição em que o ponteiro estava
+    char aux = fgetc(arquivo);
+
+    if(aux == EOF)
+        return true;
+    else {
+        // volta o ponteiro um caractere
+        fseek(arquivo, -1l, SEEK_CUR);
+        return false;
+    }
 }
 
 #endif

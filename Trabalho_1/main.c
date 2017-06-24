@@ -57,41 +57,19 @@ void importar() {
 
 void buscar() {
     FILE * fd = fopen(C_NOME_FILE_REGISTROS, "r");
-    Registro reg;
+    char chave[C_TAMANHO_CAMPO]; limparString(chave);
 
-    bool match = false;
-    char chave[C_TAMANHO_CAMPO],
-         tamanho[C_TAMANHO_CAMPO],
-         inscricao[C_TAMANHO_CAMPO];
-
-    limparString(tamanho); limparString(inscricao); limparBuffer();
-
+    limparBuffer();
     puts("Qual inscricao deseja buscar?");
     gets(chave);
 
-    fseek(fd, C_TAMANHO_CABECARIO, SEEK_SET);
+    long byteOffset = buscarPorInscricao(chave, fd);
 
-    long byteOffset = -1;
-    while(!match) {
-      lerCampo(tamanho, '|', fd);
-
-      byteOffset = ftell(fd);
-
-      lerCampo(inscricao, '|', fd);
-      removerCaractere(inscricao, '|');
-
-      fseek(fd, byteOffset, SEEK_SET);
-
-      if(stringsIguais(chave, inscricao)) {
-        reg = getRegistro(fd);
-        match = true;
-      }
-      else {
-        int iTam = atoi(tamanho);
-        fseek(fd, iTam, SEEK_CUR);
-      }
-    }
-    printRegistro(reg);
+    if(byteOffset != -1) {
+        fseek(fd, byteOffset, SEEK_SET);
+        Registro reg = getRegistro(fd);
+        printRegistro(reg);
+    } else puts("Registro nao encontrado.");
 }
 
 void inserir() {
@@ -137,6 +115,7 @@ void remover() {
 }
 
 void mostrarMenu() {
+    limparBuffer();
     switch(selecionarOpcao()) {
         case C_PARAR_EXECUCAO:
             exit(EXIT_SUCCESS);
@@ -151,7 +130,7 @@ void mostrarMenu() {
             break;
         case C_INSERIR:
             inserir();
-            //puts("Dados inseridos com sucesso!");
+            puts("Dados inseridos com sucesso!");
             break;
         case C_REMOVER:
             remover();
