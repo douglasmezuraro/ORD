@@ -32,18 +32,14 @@ void importar() {
     FILE * fDados = fopen(C_NOME_FILE_DADOS, "r");
     FILE * fRegistros = fopen(C_NOME_FILE_REGISTROS, "w");
 
-    char buffer[C_QTD_CAMPOS * C_TAMANHO_CAMPO],
-         cabecario[C_TAMANHO_CABECARIO];
+    char buffer[C_QTD_CAMPOS * C_TAMANHO_CAMPO];
 
     limparString(buffer);
-    limparString(cabecario);
 
     rewind(fDados);
     rewind(fRegistros);
 
-    strcpy(cabecario, "LED=-1");
-    setCabecario(cabecario, fRegistros);
-    fputs(cabecario, fRegistros);
+    setLedByteOffset(-1l, fRegistros);
 
     Registro reg = getRegistro(fDados);
 
@@ -94,7 +90,7 @@ void inserir() {
     setTamanhoRegistro(&reg);
     registroToString(reg, buffer);
 
-    long byteOffset = getLED(fd);
+    long byteOffset = getLedByteOffset(fd);
 
     if(byteOffset == -1) {
         // inserir no final do arquivo
@@ -111,7 +107,19 @@ void inserir() {
 }
 
 void remover() {
-    // TODO: Implementar o método de remoção
+    FILE * fd = fopen(C_NOME_FILE_REGISTROS, "rw+");
+    char chave[C_TAMANHO_CAMPO]; limparString(chave);
+
+    limparBuffer();
+    puts("Qual inscricao deseja remover?");
+    gets(chave);
+
+    long byteOffset = buscarPorInscricao(chave, fd);
+
+    if(byteOffset != -1) {
+        atualizarLed(byteOffset, fd);
+        setLedByteOffset(byteOffset, fd);
+    } else puts("Registro nao encontrado.");
 }
 
 void mostrarMenu() {
@@ -126,7 +134,7 @@ void mostrarMenu() {
             break;
         case C_BUSCAR:
             buscar();
-            //puts("Dados buscados com sucesso!");
+            puts("Dados buscados com sucesso!");
             break;
         case C_INSERIR:
             inserir();
@@ -134,7 +142,7 @@ void mostrarMenu() {
             break;
         case C_REMOVER:
             remover();
-            //puts("Dados removidos com sucesso!");
+            puts("Dados removidos com sucesso!");
             break;
         default:
             puts("Opcao invalida!");

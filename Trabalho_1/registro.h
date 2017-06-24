@@ -30,10 +30,12 @@ void removerPipeRegistro(Registro * reg);
 void setTamanhoRegistro(Registro * reg);
 Registro getRegistro(FILE * arquivo);
 void lerCampo(char campo[], char delimitador, FILE * arquivo);
-void setCabecario(char cabecario[], FILE * arquivo);
-long getLED(FILE * arquivo);
 long buscarPorInscricao(char chave[], FILE * arquivo);
 bool fimArquivo(FILE * arquivo);
+// LED
+long getLedByteOffset(FILE * arquivo);
+void setLedByteOffset(long byteOffset, FILE * arquivo);
+void atualizarLed(long byteOffset, FILE * arquivo);
 
 // Implementações
 void printRegistro(Registro reg) {
@@ -122,16 +124,8 @@ void lerCampo(char campo[], char delimitador, FILE * arquivo) {
     campo[i] = '\0'; // finaliza a string para evitar lixo
 }
 
-void setCabecario(char cabecario[], FILE * arquivo) {
-    int i,
-        length = strlen(cabecario);
-
-    for(i = length; i < C_TAMANHO_CABECARIO; i++)
-        cabecario[i] = '.';
-}
-
-long getLED(FILE * arquivo) {
-    char sLED[sizeof(int)];
+long getLedByteOffset(FILE * arquivo) {
+    char sLED[sizeof(long)];
 
     fseek(arquivo, strlen("LED="), SEEK_SET);
     lerCampo(sLED, '.', arquivo);
@@ -152,7 +146,7 @@ long buscarPorInscricao(char chave[], FILE * arquivo)
     limparString(tamanho); limparString(inscricao);
 
     // ignora o cabeçario movendo o ponteiro p/ o primeiro registro
-    fseek(arquivo, C_TAMANHO_CABECARIO, SEEK_SET);
+    fseek(arquivo, C_TAMANHO_CABECARIO + 1, SEEK_SET);
 
     // enquanto não encontrou faça:
     while(!match) {
@@ -194,6 +188,48 @@ bool fimArquivo(FILE * arquivo) {
         fseek(arquivo, -1l, SEEK_CUR);
         return false;
     }
+}
+
+void setLedByteOffset(long byteOffset, FILE * arquivo) {
+    char sLed[C_TAMANHO_CABECARIO]; limparString(sLed);
+    char sByteOffset[15]; limparString(sByteOffset);
+    int i;
+
+    // converte o byteOffset em string
+    ltoa(byteOffset, sByteOffset, 10);
+    // concatena com a string sLed, ex: "LED="
+    strcat(sLed, "LED=");
+    // concatena com a string sLed, ex: "LED=1782"
+    strcat(sLed, sByteOffset);
+
+    // preenche a string sLed com pontos, ex: "LED=1782.........."
+    for(i = strlen(sLed); i < C_TAMANHO_CABECARIO; i++)
+        sLed[i] = '.';
+
+    sLed[C_TAMANHO_CABECARIO] = '.';
+
+    // volta pro inicio do arquivo
+    rewind(arquivo);
+    // escreve a string sLed no arquivo
+    fputs(sLed, arquivo);
+}
+
+void atualizarLed(long byteOffset, FILE * arquivo) {
+    long lByteOffset = getLedByteOffset(arquivo);
+    char sByteOffset[sizeof(long)];
+
+    char sLED[sizeof(long)]; limparString(sLED);
+    ltoa(lByteOffset, sByteOffset, 10);
+
+    // ex: sLED = "(*";
+    strcat(sLED, "(*");
+    // ex: sLED = "(*7218";
+    strcat(sLED, sByteOffset);
+    // ex? sLED = "(*7218)";
+    strcat(sLED, ")");
+
+    fseek(arquivo, byteOffset, SEEK_SET);
+    fputs(sLED, arquivo);
 }
 
 #endif
