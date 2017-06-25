@@ -39,12 +39,12 @@ void importar() {
 
     setLedByteOffset(-1l, fRegistros);
 
-    Registro reg = getRegistro(fDados, false);
+    Registro reg = getRegistro(fDados);
     while(assigned(reg)) {
         registroToString(reg, buffer);
         fputs(buffer, fRegistros);
         limparString(buffer);
-        reg = getRegistro(fDados, false);
+        reg = getRegistro(fDados);
     }
 }
 
@@ -58,12 +58,13 @@ bool buscar() {
 
     long byteOffset = buscarPorInscricao(chave, fd);
 
-    if(byteOffset != -1) {
+    if(byteOffset == -1)
+        return false;
+    else {
         fseek(fd, byteOffset, SEEK_SET);
-        Registro reg = getRegistro(fd, true);
-        printRegistro(reg);
+        printRegistro(getRegistro(fd));
         return true;
-    } return false;
+    }
 }
 
 void inserir() {

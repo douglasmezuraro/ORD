@@ -1,8 +1,9 @@
 #ifndef _UTEIS_H_
 #define _UTEIS_H_
 
+#define C_BASE_DECIMAL 10
 #define C_EMPTY_STRING ""
-#define C_STRING_END '\0'
+#define C_STRING_END   '\0'
 
 // Declaração
 void limparBuffer();

@@ -28,7 +28,7 @@ Registro newRegistro();
 Registro stringToRegistro(char str[]);
 void removerPipeRegistro(Registro * reg);
 void setTamanhoRegistro(Registro * reg);
-Registro getRegistro(FILE * arquivo, bool lerTamanho);
+Registro getRegistro(FILE * arquivo);
 void lerCampo(char campo[], char delimitador, FILE * arquivo);
 long buscarPorInscricao(char chave[], FILE * arquivo);
 bool fimArquivo(FILE * arquivo);
@@ -84,8 +84,6 @@ void removerPipeRegistro(Registro * reg) {
 }
 
 void setTamanhoRegistro(Registro * reg) {
-    const C_BASE_DECIMAL = 10;
-
     int tam = strlen(reg->inscricao)
             + strlen(reg->nome)
             + strlen(reg->curso)
@@ -94,11 +92,8 @@ void setTamanhoRegistro(Registro * reg) {
     itoa(tam, reg->tamanho, C_BASE_DECIMAL);
 }
 
-Registro getRegistro(FILE * arquivo, bool lerTamanho) {
+Registro getRegistro(FILE * arquivo) {
     Registro reg = newRegistro();
-
-    if(lerTamanho)
-        lerCampo(reg.tamanho, '|', arquivo);
 
     lerCampo(reg.inscricao, '|', arquivo);
     lerCampo(reg.nome, '|', arquivo);
@@ -124,7 +119,7 @@ void lerCampo(char campo[], char delimitador, FILE * arquivo) {
         } while(campo[i - 1] != delimitador);
     }
 
-    campo[i] = '\0'; // finaliza a string para evitar lixo
+    campo[i] = C_STRING_END;
 }
 
 long getLedByteOffset(FILE * arquivo) {
@@ -153,11 +148,11 @@ long buscarPorInscricao(char chave[], FILE * arquivo)
     fseek(arquivo, C_TAMANHO_CABECARIO, SEEK_SET);
 
     while(!match) {
-        // obtem o byte offset do inicio do registro
-        byteOffset = ftell(arquivo);
-
         // lê o primeiro campo que é o tamanho do registro
         lerCampo(tamanho, '|', arquivo);
+
+        // obtem o byte offset do inicio do registro
+        byteOffset = ftell(arquivo);
 
         // lê o segundo campo que é a inscrição do registro
         lerCampo(inscricao, '|', arquivo);
@@ -165,16 +160,16 @@ long buscarPorInscricao(char chave[], FILE * arquivo)
 
         if(stringsIguais(chave, inscricao))
             match = true;
-        if(fimArquivo(arquivo)) {
-            byteOffset = -1;
-            break;
-        }
         else {
-            fseek(arquivo, byteOffset, SEEK_SET);
-            long lTam = atol(tamanho);
-                 lTam = lTam + strlen(tamanho);
-
-            fseek(arquivo, lTam, SEEK_CUR);
+            if(fimArquivo(arquivo)) {
+                byteOffset = -1;
+                break;
+            }
+            else {
+                fseek(arquivo, byteOffset, SEEK_SET);
+                long lTam = atol(tamanho);
+                fseek(arquivo, lTam, SEEK_CUR);
+            }
         }
     }
     return byteOffset;
@@ -194,15 +189,18 @@ bool fimArquivo(FILE * arquivo) {
 }
 
 void setLedByteOffset(long byteOffset, FILE * arquivo) {
-    char sLed[C_TAMANHO_CABECARIO]; limparString(sLed);
-    char sByteOffset[10]; limparString(sByteOffset);
+    char sLed[C_TAMANHO_CABECARIO],
+         sByteOffset[10];
     int i;
+
+    limparString(sLed);
+    limparString(sByteOffset);
 
     if(byteOffset > 0)
         byteOffset = byteOffset + 1; // por causa do 1 caractere do pipe
 
     // converte o byteOffset em string
-    ltoa(byteOffset, sByteOffset, 10);
+    ltoa(byteOffset, sByteOffset, C_BASE_DECIMAL);
 
     // concatena com a string sLed, ex: "LED="
     strcat(sLed, "LED=*");
@@ -231,7 +229,7 @@ void atualizarLed(long byteOffset, FILE * arquivo) {
     limparString(sLed);
 
     // converte o byteOffset que é um long e atribui na string sByteOffset
-    ltoa(lByteOffset, sByteOffset, 10);
+    ltoa(lByteOffset, sByteOffset, C_BASE_DECIMAL);
 
     // ex: sLed = "*";
     strcat(sLed, "*");
@@ -239,8 +237,8 @@ void atualizarLed(long byteOffset, FILE * arquivo) {
     // ex: sLed = "*7218";
     strcat(sLed, sByteOffset);
 
-    // ex: sLed = "*7218|";
-    strcat(sLed, "|");
+    // ex: sLed = "*7218$";
+    strcat(sLed, "$");
 
     // posiciona o ponteiro no byteOffset no registro que está sendo alterado
     fseek(arquivo, byteOffset, SEEK_SET);
