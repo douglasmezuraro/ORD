@@ -32,17 +32,19 @@ Registro getRegistro(FILE * arquivo);
 void lerCampo(char campo[], char delimitador, FILE * arquivo);
 long buscarPorInscricao(char chave[], FILE * arquivo);
 bool fimArquivo(FILE * arquivo);
+void popularBuffer(char buffer[]);
+Registro popularRegistro();
 // LED
-long getLedByteOffset(FILE * arquivo);
-void setLedByteOffset(long byteOffset, FILE * arquivo);
+long getLedHead(FILE * arquivo);
+void setLedHead(long byteOffset, FILE * arquivo);
 void atualizarLed(long byteOffset, FILE * arquivo);
 
 // Implementações
 void printRegistro(Registro reg) {
     printf("\nREGISTRO:");
-    printf("\n  > INSCRICAO = %s",   reg.inscricao);
-    printf("\n  > NOME      = %s",   reg.nome);
-    printf("\n  > CURSO     = %s",   reg.curso);
+    printf("\n  > INSCRICAO = %s", reg.inscricao);
+    printf("\n  > NOME      = %s", reg.nome);
+    printf("\n  > CURSO     = %s", reg.curso);
     printf("\n  > SCORE     = %s\n", reg.score);
 }
 
@@ -64,6 +66,8 @@ Registro newRegistro() {
 }
 
 void registroToString(Registro reg, char str[]) {
+    limparString(str);
+
     strcat(str, reg.tamanho);
     strcat(str, "|");
     strcat(str, reg.inscricao);
@@ -122,12 +126,16 @@ void lerCampo(char campo[], char delimitador, FILE * arquivo) {
     campo[i] = C_STRING_END;
 }
 
-long getLedByteOffset(FILE * arquivo) {
+long getLedHead(FILE * arquivo) {
     char sLED[10];
 
+    // posiciona o ponteiro do arquivo na posição em que esta escrito a cabeça da LED
     fseek(arquivo, strlen("LED=*"), SEEK_SET);
+
+    // lê o campo até encontrar um '.'
     lerCampo(sLED, '.', arquivo);
 
+    // retorna a cabeça da LED castando para um long
     return atol(sLED);
 }
 
@@ -188,7 +196,7 @@ bool fimArquivo(FILE * arquivo) {
     }
 }
 
-void setLedByteOffset(long byteOffset, FILE * arquivo) {
+void setLedHead(long byteOffset, FILE * arquivo) {
     char sLed[C_TAMANHO_CABECARIO],
          sByteOffset[10];
     int i;
@@ -222,7 +230,7 @@ void setLedByteOffset(long byteOffset, FILE * arquivo) {
 }
 
 void atualizarLed(long byteOffset, FILE * arquivo) {
-    long lByteOffset = getLedByteOffset(arquivo);
+    long lByteOffset = getLedHead(arquivo);
     char sByteOffset[10];
     char sLed[10];
 
@@ -245,6 +253,39 @@ void atualizarLed(long byteOffset, FILE * arquivo) {
 
     // escreve no arquivo
     fputs(sLed, arquivo);
+}
+
+void popularBuffer(char buffer[]) {
+    // obtém o registro populado com os dados inseridos pelo usuário
+    Registro reg = popularRegistro();
+
+    // inicializa a string
+    limparString(buffer);
+
+    // converte o registro em uma string para poder ser escrita no arquivo
+    registroToString(reg, buffer);
+}
+
+Registro popularRegistro() {
+    Registro reg = newRegistro();
+
+    limparBuffer();
+
+    printf("\nDigite a inscricao:\n  > ");
+    gets(reg.inscricao);
+
+    printf("\nDigite o nome:\n  > ");
+    gets(reg.nome);
+
+    printf("\nDigite o curso:\n  > ");
+    gets(reg.curso);
+
+    printf("\nDigite o score:\n  > ");
+    gets(reg.score);
+
+    setTamanhoRegistro(&reg);
+
+    return reg;
 }
 
 #endif

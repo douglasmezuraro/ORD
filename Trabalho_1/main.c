@@ -23,6 +23,8 @@ void importar();
 bool buscar();
 void inserir();
 bool remover();
+//
+void setChave(char chave[]);
 // MENU
 void mostrarMenu();
 int selecionarOpcao();
@@ -35,65 +37,67 @@ void importar() {
 
     char buffer[C_QTD_CAMPOS * C_TAMANHO_CAMPO];
 
-    limparString(buffer);
+    // escreve a posição inicial da LED
+    setLedHead(-1l, fRegistros);
 
-    setLedByteOffset(-1l, fRegistros);
-
+    // lê o registro do arquivo de dados e popula o registro
     Registro reg = getRegistro(fDados);
+
+    // enquanto o arquivo de dados tiver registros para ser lido faça
     while(assigned(reg)) {
+        // converte o registro em string para que poss
         registroToString(reg, buffer);
+
+        // escreve a string sequencialmente no arquivo
         fputs(buffer, fRegistros);
-        limparString(buffer);
+
+        // lê o próximo registro do arquivo de dados
         reg = getRegistro(fDados);
     }
 }
 
 bool buscar() {
     FILE * fd = fopen(C_NOME_FILE_REGISTROS, "r");
-    char chave[C_TAMANHO_CAMPO]; limparString(chave);
 
-    limparBuffer();
-    puts("Qual inscricao deseja buscar?");
-    gets(chave);
+    char chave[C_TAMANHO_CAMPO];
 
+    // popula a string chave com o dado digitado pelo usuário
+    setChave(chave);
+
+    // obtém o byteoffset do registro que tem a inscrição que foi anteriormente perguntada
     long byteOffset = buscarPorInscricao(chave, fd);
 
     if(byteOffset == -1)
+        // se o byteoffset for igual a -1 o registro não existe no arquivo
         return false;
     else {
+        // posiciona o ponteiro no arquivo no início do registro que está sendo procurado
         fseek(fd, byteOffset, SEEK_SET);
+
+        // printa o registro na tela
         printRegistro(getRegistro(fd));
+
+        // retorna sucesso
         return true;
     }
 }
 
 void inserir() {
     FILE * fd = fopen(C_NOME_FILE_REGISTROS, "a+");
-    Registro reg = newRegistro();
 
-    limparBuffer();
+    char buffer[C_QTD_CAMPOS * C_TAMANHO_CAMPO];
 
-    // Popula o registro
-    printf("\nDigite a inscricao:\n  > ");
-    gets(reg.inscricao);
-    printf("\nDigite o nome:\n  > ");
-    gets(reg.nome);
-    printf("\nDigite o curso:\n  > ");
-    gets(reg.curso);
-    printf("\nDigite o score:\n  > ");
-    gets(reg.score);
+    // obtém a posição onde o registro será escrito
+    long byteOffset = getLedHead(fd);
 
-    // Popula o buffer
-    char buffer[C_QTD_CAMPOS * C_TAMANHO_CAMPO]; limparString(buffer);
-
-    setTamanhoRegistro(&reg);
-    registroToString(reg, buffer);
-
-    long byteOffset = getLedByteOffset(fd);
+    // popula a string que será inserida no arquivo com os dados digitados pelo usuário
+    popularBuffer(buffer);
 
     if(byteOffset == -1) {
-        // insere no final do arquivo
+        // posiciona o ponteiro do arquivo no final do arquivo
         fseek(fd, 0, SEEK_END);
+
+        // escrever a string no arquivo
         fputs(buffer, fd);
     }
     else {
@@ -103,19 +107,41 @@ void inserir() {
 
 bool remover() {
     FILE * fd = fopen(C_NOME_FILE_REGISTROS, "rw+");
-    char chave[C_TAMANHO_CAMPO]; limparString(chave);
 
-    limparBuffer();
-    puts("Qual inscricao deseja remover?");
-    gets(chave);
+    char chave[C_TAMANHO_CAMPO];
 
+    // popula a string chave com o dado digitado pelo usuário
+    setChave(chave);
+
+    // obtém o byteoffset do registro a ser removido
     long byteOffset = buscarPorInscricao(chave, fd);
 
-    if(byteOffset != -1) {
+
+    if(byteOffset == -1)
+        // retorna falha por não encontrar o registro que seria removido
+        return false;
+    else {
+        // sinaliza que o registro foi removido escrevendo nele a cabeça da LED
         atualizarLed(byteOffset, fd);
-        setLedByteOffset(byteOffset, fd);
+
+        // muda a cabeça da LED com o byte offset do registro removido
+        setLedHead(byteOffset, fd);
+
+        // retorna que o registro foi removido do arquivo
         return true;
-    } return false;
+    }
+}
+
+void setChave(char chave[]) {
+    // inicializa a string
+    limparString(chave);
+
+    // remove os possíveis lixos no buffer
+    limparBuffer();
+
+    // obtem a insrição a ser procurada
+    puts("Qual inscricao deseja buscar?");
+    gets(chave);
 }
 
 void mostrarMenu() {
