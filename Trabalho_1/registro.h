@@ -24,7 +24,8 @@ typedef struct {
 // Declarações
 Registro newRegistro();
 void registroToString(Registro reg, char str[], bool concatenarTamanho);
-void setTamanhoRegistro(Registro * reg);
+int getTamanhoRegistro(Registro reg);
+void setTamanhoRegistro(Registro * reg, int tam);
 Registro getRegistro(FILE * arquivo);
 void lerCampo(char campo[], char delimitador, FILE * arquivo);
 long buscarPorInscricao(char chave[], FILE * arquivo);
@@ -93,12 +94,14 @@ void removerPipeRegistro(Registro * reg) {
     removerCaractere(reg->score, '|');
 }
 
-void setTamanhoRegistro(Registro * reg) {
-    int tam = strlen(reg->inscricao)
-            + strlen(reg->nome)
-            + strlen(reg->curso)
-            + strlen(reg->score);
+int getTamanhoRegistro(Registro reg) {
+  return strlen(reg.inscricao)
+       + strlen(reg.nome)
+       + strlen(reg.curso)
+       + strlen(reg.score);
+}
 
+void setTamanhoRegistro(Registro * reg, int tam) {
     itoa(tam, reg->tamanho, C_BASE_DECIMAL);
 }
 
@@ -110,7 +113,7 @@ Registro getRegistro(FILE * arquivo) {
     lerCampo(reg.curso, '|', arquivo);
     lerCampo(reg.score, '|', arquivo);
 
-    setTamanhoRegistro(&reg);
+    setTamanhoRegistro(&reg, getTamanhoRegistro(reg));
 
     removerPipeRegistro(&reg);
 
@@ -145,7 +148,7 @@ long getLedHead(FILE * arquivo) {
     return atol(sLED);
 }
 
-long buscarPorInscricao(char chave[], FILE * arquivo) s{
+long buscarPorInscricao(char chave[], FILE * arquivo) {
     char tamanho[C_TAMANHO_CAMPO],
          inscricao[C_TAMANHO_CAMPO];
 
@@ -284,7 +287,7 @@ Registro popularRegistro() {
     printf("\nDigite o score:\n  > ");
     gets(reg.score);
 
-    setTamanhoRegistro(&reg);
+    setTamanhoRegistro(&reg, getTamanhoRegistro(reg) + C_QTD_CAMPOS);
 
     return reg;
 }
