@@ -208,8 +208,8 @@ void setLedHead(long byteOffset, FILE * arquivo) {
     limparString(sLed);
     limparString(sByteOffset);
 
-    if(byteOffset > 0)
-        byteOffset = byteOffset + 1; // por causa do 1 caractere do pipe
+    //if(byteOffset > 0)
+    //    byteOffset = byteOffset + 1; // por causa do 1 caractere do pipe
 
     // converte o byteOffset em string
     ltoa(byteOffset, sByteOffset, C_BASE_DECIMAL);
@@ -224,6 +224,7 @@ void setLedHead(long byteOffset, FILE * arquivo) {
     for(i = strlen(sLed); i < C_TAMANHO_CABECARIO; i++)
         sLed[i] = '.';
 
+    sLed[C_TAMANHO_CABECARIO -1] = '|';
     sLed[C_TAMANHO_CABECARIO] = '\0';
 
     // volta pro inicio do arquivo
@@ -294,7 +295,7 @@ Registro popularRegistro() {
 
 int getTamanhoCandidato(long pCandidato, FILE * arquivo) {
     if(pCandidato == -1)
-        return - 1;
+        return pCandidato;
     else {
       int len = 0,
           pipe = 0;
@@ -303,10 +304,10 @@ int getTamanhoCandidato(long pCandidato, FILE * arquivo) {
 
       fseek(arquivo, pCandidato, SEEK_SET);
 
-
       while(pipe < 2) {
           len++;
-          fseek(arquivo, pCandidato - len, SEEK_SET);
+          long passo = pCandidato - len;
+          fseek(arquivo, passo, SEEK_SET);
 
           if(flag = fgetc(arquivo) == '|')
             pipe++;
@@ -333,7 +334,7 @@ long getByteOffsetInsercao(int tamanhoRegistro, long pCandidato, FILE * arquivo)
 
         if(tCandidato >= tamanhoRegistro) {
             setLedHead(atol(sPonteiro), arquivo);
-            return pCandidato;
+            return pCandidato;// - 1;
         }
         else {
             pCandidato = atol(sPonteiro);
