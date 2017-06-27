@@ -145,10 +145,7 @@ long getLedHead(FILE * arquivo) {
     return atol(sLED);
 }
 
-long buscarPorInscricao(char chave[], FILE * arquivo)
-// Esse método busca uma incricao no arquivo e retorna seu byte offset,
-// caso nao encontre o retorno é -1
-{
+long buscarPorInscricao(char chave[], FILE * arquivo) s{
     char tamanho[C_TAMANHO_CAMPO],
          inscricao[C_TAMANHO_CAMPO];
 
@@ -190,13 +187,11 @@ long buscarPorInscricao(char chave[], FILE * arquivo)
 }
 
 bool fimArquivo(FILE * arquivo) {
-    // lê o caractere da posição em que o ponteiro estava
     char aux = fgetc(arquivo);
 
     if(aux == EOF)
         return true;
     else {
-        // volta o ponteiro um caractere
         fseek(arquivo, -1l, SEEK_CUR);
         return false;
     }
@@ -323,10 +318,8 @@ int getTamanhoCandidato(long pCandidato, FILE * arquivo) {
 }
 
 long getByteOffsetInsercao(int tamanhoRegistro, long pCandidato, FILE * arquivo) {
-    if(pCandidato == -1) {
-        fseek(arquivo, 0, SEEK_END);
-        return ftell(arquivo);
-    }
+    if(pCandidato == -1)
+        return pCandidato;
     else {
         char sPonteiro[10];
 

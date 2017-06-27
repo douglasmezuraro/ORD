@@ -37,21 +37,12 @@ void importar() {
 
     char buffer[C_QTD_CAMPOS * C_TAMANHO_CAMPO];
 
-    // escreve a posição inicial da LED
     setLedHead(-1l, fRegistros);
-
-    // lê o registro do arquivo de dados e popula o registro
     Registro reg = getRegistro(fDados);
 
-    // enquanto o arquivo de dados tiver registros para ser lido faça
     while(assigned(reg)) {
-        // converte o registro em string para que poss
         registroToString(reg, buffer, true);
-
-        // escreve a string sequencialmente no arquivo
         fputs(buffer, fRegistros);
-
-        // lê o próximo registro do arquivo de dados
         reg = getRegistro(fDados);
     }
 
@@ -63,28 +54,21 @@ bool buscar() {
     FILE * fd = fopen(C_NOME_FILE_REGISTROS, "r");
 
     char chave[C_TAMANHO_CAMPO];
+    long byteOffset;
 
-    // popula a string chave com o dado digitado pelo usuário
     setChave(chave);
+    byteOffset = buscarPorInscricao(chave, fd);
 
-    // obtém o byteoffset do registro que tem a inscrição que foi anteriormente perguntada
-    long byteOffset = buscarPorInscricao(chave, fd);
-
-    if(byteOffset == -1)
-        // se o byteoffset for igual a -1 o registro não existe no arquivo
+    if(byteOffset == -1) {
+        fclose(fd);
         return false;
+    }
     else {
-        // posiciona o ponteiro no arquivo no início do registro que está sendo procurado
         fseek(fd, byteOffset, SEEK_SET);
-
-        // printa o registro na tela
         printRegistro(getRegistro(fd));
-
-        // retorna sucesso
+        fclose(fd);
         return true;
     }
-
-    fclose(fd);
 }
 
 void inserir() {
@@ -92,12 +76,17 @@ void inserir() {
 
     char buffer[C_QTD_CAMPOS * C_TAMANHO_CAMPO];
 
-    // popula a string que será inserida no arquivo com os dados digitados pelo usuário
     Registro reg = popularRegistro();
-    registroToString(reg, buffer, false);
 
-   long byteOffset = getByteOffsetInsercao(atoi(reg.tamanho), getLedHead(fd), fd);
-    fseek(fd, byteOffset, SEEK_SET);
+    long byteOffset = getByteOffsetInsercao(atoi(reg.tamanho), getLedHead(fd), fd);
+
+    registroToString(reg, buffer, byteOffset == -1);
+
+    if(byteOffset == -1)
+        fseek(fd, 0, SEEK_END);
+    else
+      fseek(fd, byteOffset, SEEK_SET);
+
     fputs(buffer, fd);
 
     fclose(fd);
@@ -107,29 +96,21 @@ bool remover() {
     FILE * fd = fopen(C_NOME_FILE_REGISTROS, "rw+");
 
     char chave[C_TAMANHO_CAMPO];
+    long byteOffset;
 
-    // popula a string chave com o dado digitado pelo usuário
     setChave(chave);
+    byteOffset = buscarPorInscricao(chave, fd);
 
-    // obtém o byteoffset do registro a ser removido
-    long byteOffset = buscarPorInscricao(chave, fd);
-
-
-    if(byteOffset == -1)
-        // retorna falha por não encontrar o registro que seria removido
-        return false;
+    if(byteOffset == -1) {
+      fclose(fd);
+      return false;
+    }
     else {
-        // sinaliza que o registro foi removido escrevendo nele a cabeça da LED
         apontarPraLEDHead(byteOffset, fd);
-
-        // muda a cabeça da LED com o byte offset do registro removido
         setLedHead(byteOffset, fd);
-
-        // retorna que o registro foi removido do arquivo
+        fclose(fd);
         return true;
     }
-
-    fclose(fd);
 }
 
 void setChave(char chave[]) {
