@@ -22,11 +22,8 @@ typedef struct {
 } Registro;
 
 // Declarações
-void printRegistro(Registro reg);
-bool assigned(Registro reg);
 Registro newRegistro();
-Registro stringToRegistro(char str[]);
-void removerPipeRegistro(Registro * reg);
+void registroToString(Registro reg, char str[], bool concatenarTamanho);
 void setTamanhoRegistro(Registro * reg);
 Registro getRegistro(FILE * arquivo);
 void lerCampo(char campo[], char delimitador, FILE * arquivo);
@@ -34,10 +31,16 @@ long buscarPorInscricao(char chave[], FILE * arquivo);
 bool fimArquivo(FILE * arquivo);
 void popularBuffer(char buffer[]);
 Registro popularRegistro();
+// Métodos utéis
+bool assigned(Registro reg);
+void printRegistro(Registro reg);
+void removerPipeRegistro(Registro * reg);
 // LED
 long getLedHead(FILE * arquivo);
 void setLedHead(long byteOffset, FILE * arquivo);
-void atualizarLed(long byteOffset, FILE * arquivo);
+void apontarPraLEDHead(long byteOffset, FILE * arquivo);
+long index(FILE * arquivo);
+long getByteOffsetInsercao(int tamanhoRegistro, long pCandidato, FILE * arquivo);
 
 // Implementações
 void printRegistro(Registro reg) {
@@ -65,11 +68,14 @@ Registro newRegistro() {
     return reg;
 }
 
-void registroToString(Registro reg, char str[]) {
+void registroToString(Registro reg, char str[], bool concatenarTamanho) {
     limparString(str);
 
-    strcat(str, reg.tamanho);
-    strcat(str, "|");
+    if(concatenarTamanho) {
+      strcat(str, reg.tamanho);
+      strcat(str, "|");
+    }
+
     strcat(str, reg.inscricao);
     strcat(str, "|");
     strcat(str, reg.nome);
@@ -229,7 +235,7 @@ void setLedHead(long byteOffset, FILE * arquivo) {
     fputs(sLed, arquivo);
 }
 
-void atualizarLed(long byteOffset, FILE * arquivo) {
+void apontarPraLEDHead(long byteOffset, FILE * arquivo) {
     long lByteOffset = getLedHead(arquivo);
     char sByteOffset[10];
     char sLed[10];
@@ -263,7 +269,7 @@ void popularBuffer(char buffer[]) {
     limparString(buffer);
 
     // converte o registro em uma string para poder ser escrita no arquivo
-    registroToString(reg, buffer);
+    registroToString(reg, buffer, true);
 }
 
 Registro popularRegistro() {
@@ -287,5 +293,59 @@ Registro popularRegistro() {
 
     return reg;
 }
+
+int getTamanhoCandidato(long pCandidato, FILE * arquivo) {
+    if(pCandidato == -1)
+        return - 1;
+    else {
+      int len = 0,
+          pipe = 0;
+
+      char flag;
+
+      fseek(arquivo, pCandidato, SEEK_SET);
+
+
+      while(pipe < 2) {
+          len++;
+          fseek(arquivo, pCandidato - len, SEEK_SET);
+
+          if(flag = fgetc(arquivo) == '|')
+            pipe++;
+      }
+
+      char sTam[10];
+      limparString(sTam);
+
+      lerCampo(sTam, '|', arquivo);
+      return atoi(sTam);
+    }
+}
+
+long getByteOffsetInsercao(int tamanhoRegistro, long pCandidato, FILE * arquivo) {
+    if(pCandidato == -1) {
+        fseek(arquivo, 0, SEEK_END);
+        return ftell(arquivo);
+    }
+    else {
+        char sPonteiro[10];
+
+        int tCandidato = getTamanhoCandidato(pCandidato, arquivo);
+
+        fseek(arquivo, pCandidato, SEEK_SET);
+        lerCampo(sPonteiro, '$', arquivo);
+
+        if(tCandidato >= tamanhoRegistro) {
+            setLedHead(atol(sPonteiro), arquivo);
+            return pCandidato;
+        }
+        else {
+            pCandidato = atol(sPonteiro);
+            getByteOffsetInsercao(tamanhoRegistro, pCandidato, arquivo);
+        }
+    }
+}
+
+
 
 #endif

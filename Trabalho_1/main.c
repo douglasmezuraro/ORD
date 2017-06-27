@@ -46,7 +46,7 @@ void importar() {
     // enquanto o arquivo de dados tiver registros para ser lido faça
     while(assigned(reg)) {
         // converte o registro em string para que poss
-        registroToString(reg, buffer);
+        registroToString(reg, buffer, true);
 
         // escreve a string sequencialmente no arquivo
         fputs(buffer, fRegistros);
@@ -54,6 +54,9 @@ void importar() {
         // lê o próximo registro do arquivo de dados
         reg = getRegistro(fDados);
     }
+
+    fclose(fDados);
+    fclose(fRegistros);
 }
 
 bool buscar() {
@@ -80,29 +83,24 @@ bool buscar() {
         // retorna sucesso
         return true;
     }
+
+    fclose(fd);
 }
 
 void inserir() {
-    FILE * fd = fopen(C_NOME_FILE_REGISTROS, "a+");
+    FILE * fd = fopen(C_NOME_FILE_REGISTROS, "rw+");
 
     char buffer[C_QTD_CAMPOS * C_TAMANHO_CAMPO];
 
-    // obtém a posição onde o registro será escrito
-    long byteOffset = getLedHead(fd);
-
     // popula a string que será inserida no arquivo com os dados digitados pelo usuário
-    popularBuffer(buffer);
+    Registro reg = popularRegistro();
+    registroToString(reg, buffer, false);
 
-    if(byteOffset == -1) {
-        // posiciona o ponteiro do arquivo no final do arquivo
-        fseek(fd, 0, SEEK_END);
+   long byteOffset = getByteOffsetInsercao(atoi(reg.tamanho), getLedHead(fd), fd);
+    fseek(fd, byteOffset, SEEK_SET);
+    fputs(buffer, fd);
 
-        // escrever a string no arquivo
-        fputs(buffer, fd);
-    }
-    else {
-        // TODO: PEGAR O PRIMEIRO ESPAÇO DISPONIVEL DA LED QUE CAIBA O REGISTRO
-    }
+    fclose(fd);
 }
 
 bool remover() {
@@ -122,7 +120,7 @@ bool remover() {
         return false;
     else {
         // sinaliza que o registro foi removido escrevendo nele a cabeça da LED
-        atualizarLed(byteOffset, fd);
+        apontarPraLEDHead(byteOffset, fd);
 
         // muda a cabeça da LED com o byte offset do registro removido
         setLedHead(byteOffset, fd);
@@ -130,6 +128,8 @@ bool remover() {
         // retorna que o registro foi removido do arquivo
         return true;
     }
+
+    fclose(fd);
 }
 
 void setChave(char chave[]) {
