@@ -132,19 +132,15 @@ void lerCampo(char campo[], char delimitador, FILE * arquivo) {
         } while(campo[i - 1] != delimitador);
     }
 
-    campo[i] = C_STRING_END;
+    campo[i] = C_CHAR_END;
 }
 
 long getLedHead(FILE * arquivo) {
     char sLED[10];
 
-    // posiciona o ponteiro do arquivo na posição em que esta escrito a cabeça da LED
     fseek(arquivo, strlen("LED=*"), SEEK_SET);
-
-    // lê o campo até encontrar um '.'
     lerCampo(sLED, '.', arquivo);
 
-    // retorna a cabeça da LED castando para um long
     return atol(sLED);
 }
 
@@ -205,29 +201,22 @@ void setLedHead(long byteOffset, FILE * arquivo) {
          sByteOffset[10];
     int i;
 
+
     limparString(sLed);
     limparString(sByteOffset);
 
-    // converte o byteOffset em string
     ltoa(byteOffset, sByteOffset, C_BASE_DECIMAL);
 
-    // concatena com a string sLed, ex: "LED="
     strcat(sLed, "LED=*");
-
-    // concatena com a string sLed, ex: "LED=1782"
     strcat(sLed, sByteOffset);
 
-    // preenche a string sLed com pontos, ex: "LED=1782.........."
     for(i = strlen(sLed); i < C_TAMANHO_CABECARIO; i++)
         sLed[i] = '.';
 
     sLed[C_TAMANHO_CABECARIO -1] = '|';
     sLed[C_TAMANHO_CABECARIO] = '\0';
 
-    // volta pro inicio do arquivo
     rewind(arquivo);
-
-    // escreve a string sLed no arquivo
     fputs(sLed, arquivo);
 }
 
@@ -238,33 +227,19 @@ void apontarPraLEDHead(long byteOffset, FILE * arquivo) {
 
     limparString(sLed);
 
-    // converte o byteOffset que é um long e atribui na string sByteOffset
     ltoa(lByteOffset, sByteOffset, C_BASE_DECIMAL);
 
-    // ex: sLed = "*";
     strcat(sLed, "*");
-
-    // ex: sLed = "*7218";
     strcat(sLed, sByteOffset);
-
-    // ex: sLed = "*7218$";
     strcat(sLed, "$");
 
-    // posiciona o ponteiro no byteOffset no registro que está sendo alterado
     fseek(arquivo, byteOffset, SEEK_SET);
-
-    // escreve no arquivo
     fputs(sLed, arquivo);
 }
 
 void popularBuffer(char buffer[]) {
-    // obtém o registro populado com os dados inseridos pelo usuário
     Registro reg = popularRegistro();
-
-    // inicializa a string
     limparString(buffer);
-
-    // converte o registro em uma string para poder ser escrita no arquivo
     registroToString(reg, buffer, true);
 }
 
@@ -291,8 +266,8 @@ Registro popularRegistro() {
 }
 
 int getTamanhoCandidato(long pCandidato, FILE * arquivo) {
-    if(pCandidato == -1)
-        return pCandidato;
+    if(pCandidato <= 0)
+        return -1;
     else {
       int len = 0,
           pipe = 0;
@@ -319,29 +294,29 @@ int getTamanhoCandidato(long pCandidato, FILE * arquivo) {
 }
 
 long getByteOffsetInsercao(int tamanhoRegistro, long pCandidato, FILE * arquivo) {
-    if(pCandidato == -1)
+    int tCandidato = getTamanhoCandidato(pCandidato, arquivo);
+    char sPonteiro[10];
+
+    if(pCandidato != -1) {
+      fseek(arquivo, pCandidato, SEEK_SET);
+      lerCampo(sPonteiro, '$', arquivo);
+
+      substituiChar(sPonteiro, '*', ' ');
+      substituiChar(sPonteiro, '$', '\0');
+    }
+
+    if(tCandidato >= tamanhoRegistro) {
+        setLedHead(atol(sPonteiro), arquivo);
         return pCandidato;
+    }
+    else if(tCandidato == -1) {
+        fseek(arquivo, 0l, SEEK_END);
+        return ftell(arquivo);
+    }
     else {
-        int tCandidato = getTamanhoCandidato(pCandidato, arquivo);
-
-        fseek(arquivo, pCandidato, SEEK_SET);
-
-        char sPonteiro[10];
-        lerCampo(sPonteiro, '$', arquivo);
-        substituiChar(sPonteiro, '*', ' ');
-        substituiChar(sPonteiro, '$', '\0');
-
-        if(tCandidato >= tamanhoRegistro) {
-            setLedHead(atol(sPonteiro), arquivo);
-            return pCandidato;
-        }
-        else {
-            pCandidato = atol(sPonteiro);
-            getByteOffsetInsercao(tamanhoRegistro, pCandidato, arquivo);
-        }
+        pCandidato = atol(sPonteiro);
+        getByteOffsetInsercao(tamanhoRegistro, pCandidato, arquivo);
     }
 }
-
-
 
 #endif

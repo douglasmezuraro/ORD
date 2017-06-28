@@ -82,10 +82,7 @@ void inserir() {
 
     registroToString(reg, buffer, byteOffset == -1);
 
-    if(byteOffset == -1)
-        fseek(fd, 0, SEEK_END);
-    else
-      fseek(fd, byteOffset, SEEK_SET);
+    fseek(fd, byteOffset, SEEK_SET);
 
     fputs(buffer, fd);
 
@@ -102,8 +99,8 @@ bool remover() {
     byteOffset = buscarPorInscricao(chave, fd);
 
     if(byteOffset == -1) {
-      fclose(fd);
-      return false;
+        fclose(fd);
+        return false;
     }
     else {
         apontarPraLEDHead(byteOffset, fd);

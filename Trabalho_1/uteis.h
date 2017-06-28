@@ -3,7 +3,8 @@
 
 #define C_BASE_DECIMAL 10
 #define C_EMPTY_STRING ""
-#define C_STRING_END   '\0'
+#define C_CHAR_END     '\0'
+#define C_CHAR_EMPTY   ' '
 
 // Declaração
 void limparBuffer();
@@ -26,7 +27,7 @@ void removerCaractere(char str[], char caractere) {
 
     for(i = 0; i < strlen(str); i++) {
         if(str[i] == caractere)
-            str[i] = C_STRING_END;
+            str[i] = C_CHAR_END;
     }
 }
 
@@ -40,7 +41,7 @@ void substituiChar(char str[], char oldChar, char newChar) {
 }
 
 void limparString(char str[]) {
-    str[0] = C_STRING_END;
+    str[0] = C_CHAR_END;
 }
 
 #endif
