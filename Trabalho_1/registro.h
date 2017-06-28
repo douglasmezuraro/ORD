@@ -2,8 +2,6 @@
 #define _REGISTRO_H_
 
 #define C_TAMANHO_CABECARIO 50
-// TODO: o cabeçario por hora contem apenas a led, futuramente se
-// der tempo implementar mais coisas, ex, qte de registros
 #define C_TAMANHO_CAMPO     40
 #define C_QTD_CAMPOS        4
 
@@ -21,7 +19,7 @@ typedef struct {
     char tamanho[sizeof(int)];
 } Registro;
 
-// Declarações
+/// Declarações
 Registro newRegistro();
 void registroToString(Registro reg, char str[], bool concatenarTamanho);
 int getTamanhoRegistro(Registro reg);
@@ -32,18 +30,21 @@ long buscarPorInscricao(char chave[], FILE * arquivo);
 bool fimArquivo(FILE * arquivo);
 void popularBuffer(char buffer[]);
 Registro popularRegistro();
-// Métodos utéis
+
+/// Métodos utéis
 bool assigned(Registro reg);
 void printRegistro(Registro reg);
 void removerPipeRegistro(Registro * reg);
-// LED
+
+/// LED
 long getLedHead(FILE * arquivo);
 void setLedHead(long byteOffset, FILE * arquivo);
 void apontarPraLEDHead(long byteOffset, FILE * arquivo);
 long index(FILE * arquivo);
 long getByteOffsetInsercao(int tamanhoRegistro, long pCandidato, FILE * arquivo);
 
-// Implementações
+/// Implementação
+
 void printRegistro(Registro reg) {
     printf("\nREGISTRO:");
     printf("\n  > INSCRICAO = %s", reg.inscricao);
@@ -63,7 +64,6 @@ Registro newRegistro() {
     limparString(reg.nome);
     limparString(reg.curso);
     limparString(reg.score);
-
     strcpy(reg.tamanho, "0");
 
     return reg;
@@ -197,9 +197,9 @@ bool fimArquivo(FILE * arquivo) {
 }
 
 void setLedHead(long byteOffset, FILE * arquivo) {
+    int i;
     char sLed[C_TAMANHO_CABECARIO],
          sByteOffset[10];
-    int i;
 
 
     limparString(sLed);
