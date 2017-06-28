@@ -208,9 +208,6 @@ void setLedHead(long byteOffset, FILE * arquivo) {
     limparString(sLed);
     limparString(sByteOffset);
 
-    //if(byteOffset > 0)
-    //    byteOffset = byteOffset + 1; // por causa do 1 caractere do pipe
-
     // converte o byteOffset em string
     ltoa(byteOffset, sByteOffset, C_BASE_DECIMAL);
 
@@ -325,16 +322,18 @@ long getByteOffsetInsercao(int tamanhoRegistro, long pCandidato, FILE * arquivo)
     if(pCandidato == -1)
         return pCandidato;
     else {
-        char sPonteiro[10];
-
         int tCandidato = getTamanhoCandidato(pCandidato, arquivo);
 
         fseek(arquivo, pCandidato, SEEK_SET);
+
+        char sPonteiro[10];
         lerCampo(sPonteiro, '$', arquivo);
+        substituiChar(sPonteiro, '*', ' ');
+        substituiChar(sPonteiro, '$', '\0');
 
         if(tCandidato >= tamanhoRegistro) {
             setLedHead(atol(sPonteiro), arquivo);
-            return pCandidato;// - 1;
+            return pCandidato;
         }
         else {
             pCandidato = atol(sPonteiro);

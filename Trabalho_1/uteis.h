@@ -9,6 +9,7 @@
 void limparBuffer();
 bool stringsIguais(char a[], char b[]);
 void removerCaractere(char str[], char caractere);
+void substituiChar(char str[], char oldChar, char newChar);
 void limparString(char str[]);
 
 // Implementação
@@ -26,6 +27,15 @@ void removerCaractere(char str[], char caractere) {
     for(i = 0; i < strlen(str); i++) {
         if(str[i] == caractere)
             str[i] = C_STRING_END;
+    }
+}
+
+void substituiChar(char str[], char oldChar, char newChar) {
+    int i;
+
+    for(i = 0; i < strlen(str); i++) {
+        if(str[i] == oldChar)
+            str[i] = newChar;
     }
 }
 
