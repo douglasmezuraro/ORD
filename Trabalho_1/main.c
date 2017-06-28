@@ -18,17 +18,16 @@
 #define C_INSERIR        3
 #define C_REMOVER        4
 
-// REQUISITOS
+/// Requisitos
 void importar();
-bool buscar();
+bool buscar(char inscricao[]);
 void inserir();
-bool remover();
-//
-void setChave(char chave[]);
-// MENU
+bool remover(char inscricao[]);
+/// Métodos utéis
+void setInscricao(char inscricao[]);
 void mostrarMenu();
 int selecionarOpcao();
-//
+/// Método principal
 int main();
 
 void importar() {
@@ -50,14 +49,10 @@ void importar() {
     fclose(fRegistros);
 }
 
-bool buscar() {
+bool buscar(char inscricao[]) {
     FILE * fd = fopen(C_NOME_FILE_REGISTROS, "r");
 
-    char chave[C_TAMANHO_CAMPO];
-    long byteOffset;
-
-    setChave(chave);
-    byteOffset = buscarPorInscricao(chave, fd);
+    long byteOffset = buscarPorInscricao(inscricao, fd);
 
     if(byteOffset == -1) {
         fclose(fd);
@@ -79,24 +74,17 @@ void inserir() {
     Registro reg = popularRegistro();
 
     long byteOffset = getByteOffsetInsercao(atoi(reg.tamanho), getLedHead(fd), fd);
-
     registroToString(reg, buffer, byteOffset == -1);
-
     fseek(fd, byteOffset, SEEK_SET);
-
     fputs(buffer, fd);
 
     fclose(fd);
 }
 
-bool remover() {
+bool remover(char inscricao[]) {
     FILE * fd = fopen(C_NOME_FILE_REGISTROS, "rw+");
 
-    char chave[C_TAMANHO_CAMPO];
-    long byteOffset;
-
-    setChave(chave);
-    byteOffset = buscarPorInscricao(chave, fd);
+    long byteOffset = buscarPorInscricao(inscricao, fd);
 
     if(byteOffset == -1) {
         fclose(fd);
@@ -110,42 +98,47 @@ bool remover() {
     }
 }
 
-void setChave(char chave[]) {
-    // inicializa a string
-    limparString(chave);
-
-    // remove os possíveis lixos no buffer
+void setInscricao(char inscricao[]) {
+    limparString(inscricao);
     limparBuffer();
 
-    // obtem a insrição a ser procurada
-    puts("Qual inscricao deseja buscar?");
-    gets(chave);
+    puts("Digite a chave:");
+    gets(inscricao);
 }
 
 void mostrarMenu() {
-    limparBuffer();
+    const int C_TAM_INSCRICAO = 10;
+    char inscricao[C_TAM_INSCRICAO];
+
     switch(selecionarOpcao()) {
         case C_PARAR_EXECUCAO:
             exit(EXIT_SUCCESS);
             break;
+
         case C_IMPORTAR:
             importar();
             puts("Dados importados com sucesso!");
             break;
+
         case C_BUSCAR:
-            if(!buscar())
+            setInscricao(inscricao);
+            if(!buscar(inscricao))
                 puts("Registro nao encontrdo!");
             break;
+
         case C_INSERIR:
             inserir();
             puts("Dados inseridos com sucesso!");
             break;
+
         case C_REMOVER:
-            if(remover())
+            setInscricao(inscricao);
+            if(remover(inscricao))
                 puts("Registro removido com sucesso!");
             else
                 puts("Registro nao encontrado!");
             break;
+
         default:
             puts("Opcao invalida!");
     }
@@ -160,14 +153,14 @@ void mostrarMenu() {
 }
 
 int selecionarOpcao() {
-    puts("MENU:");
-    puts("  1 - Importar.");
-    puts("  2 - Buscar.");
-    puts("  3 - Inserir.");
-    puts("  4 - Remover.");
-    puts("");
-    puts("  0 - Sair.");
-    puts("");
+    puts("MENU:                  ");
+    puts("  1 - Importar.        ");
+    puts("  2 - Buscar.          ");
+    puts("  3 - Inserir.         ");
+    puts("  4 - Remover.         ");
+    puts("                       ");
+    puts("  0 - Sair.            ");
+    puts("                       ");
     puts("> Selecione uma opcao: ");
 
     int aux = -1;
