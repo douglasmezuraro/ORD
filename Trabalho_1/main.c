@@ -34,6 +34,9 @@ void importar() {
     FILE * fDados = fopen(C_NOME_FILE_DADOS, "r");
     FILE * fRegistros = fopen(C_NOME_FILE_REGISTROS, "w");
 
+    verificarArquivo(fDados);
+    verificarArquivo(fRegistros);
+
     char buffer[C_QTD_CAMPOS * C_TAMANHO_CAMPO];
 
     setLedHead(-1l, fRegistros);
@@ -52,6 +55,8 @@ void importar() {
 bool buscar(char inscricao[]) {
     FILE * fd = fopen(C_NOME_FILE_REGISTROS, "r");
 
+    verificarArquivo(fd);
+
     long byteOffset = buscarPorInscricao(inscricao, fd);
 
     if(byteOffset == -1) {
@@ -69,12 +74,16 @@ bool buscar(char inscricao[]) {
 void inserir() {
     FILE * fd = fopen(C_NOME_FILE_REGISTROS, "rw+");
 
+    verificarArquivo(fd);
+
     char buffer[C_QTD_CAMPOS * C_TAMANHO_CAMPO];
 
     Registro reg = popularRegistro();
 
     long byteOffset = getByteOffsetInsercao(atoi(reg.tamanho), getLedHead(fd), fd);
-    registroToString(reg, buffer, byteOffset == -1);
+
+    registroToString(reg, buffer, byteOffset == getByteOffsetFinal(fd));
+
     fseek(fd, byteOffset, SEEK_SET);
     fputs(buffer, fd);
 
@@ -83,6 +92,8 @@ void inserir() {
 
 bool remover(char inscricao[]) {
     FILE * fd = fopen(C_NOME_FILE_REGISTROS, "rw+");
+
+    verificarArquivo(fd);
 
     long byteOffset = buscarPorInscricao(inscricao, fd);
 

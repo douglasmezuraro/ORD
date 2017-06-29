@@ -35,6 +35,8 @@ Registro popularRegistro();
 bool assigned(Registro reg);
 void printRegistro(Registro reg);
 void removerPipeRegistro(Registro * reg);
+long getByteOffsetFinal(FILE * arquivo);
+void verificarArquivo(FILE * arquivo);
 
 /// LED
 long getLedHead(FILE * arquivo);
@@ -309,13 +311,23 @@ long getByteOffsetInsercao(int tamanhoRegistro, long pCandidato, FILE * arquivo)
         setLedHead(atol(sPonteiro), arquivo);
         return pCandidato;
     }
-    else if(tCandidato == -1) {
-        fseek(arquivo, 0l, SEEK_END);
-        return ftell(arquivo);
-    }
+    else if(tCandidato == -1)
+        return getByteOffsetFinal(arquivo);
     else {
         pCandidato = atol(sPonteiro);
         getByteOffsetInsercao(tamanhoRegistro, pCandidato, arquivo);
+    }
+}
+
+long getByteOffsetFinal(FILE * arquivo) {
+    fseek(arquivo, 0l, SEEK_END);
+    return ftell(arquivo);
+}
+
+void verificarArquivo(FILE * arquivo) {
+    if(arquivo == NULL) {
+        puts("Ocorreu um problema ao tentar abrir o arquivo. A aplicacao sera finalizada.");
+        exit(EXIT_FAILURE);
     }
 }
 
