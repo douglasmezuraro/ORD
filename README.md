@@ -1,9 +1,9 @@
-# LED First-Fit
-##### Autores
-Douglas Mezuraro
-Gustavo Leite
-##### Descri��o
-Reposit�rio do primeiro trabalho da disciplina de Organiza��o e Recupera��o de Dados que � a implementa��o de uma LED (lista de espa�os dispon�veis) adotando a t�cnica de First-Fit.
-##### Todos
-- Corrigir bug na inser��o que causa perda de refer�ncia
-- Mudar a implementa��o das bibliotecas do .h para .c
+﻿# LED First-Fit
+##### Autores
+Douglas Mezuraro
+Gustavo Leite
+##### Descricao
+Repositorio do primeiro trabalho da disciplina de Organizacao e Recuperacao de Dados que e a implementacao de uma LED (lista de espacos disponiveis) adotando a tecnica de First-Fit.
+##### Todos
+- Corrigir bug na insercao que causa perda de referencia
+- Mudar a implementacao das bibliotecas dos arquivos .h para .c
